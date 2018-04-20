@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="generator">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/lib/generator.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
