@@ -1,6 +1,6 @@
 package org.apache.spark
 
-import ca.lif.sparklauncher.main.CustomLogger
+import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.Models.{Hyperedge, Hypergraph}
 
 import scala.collection.mutable.Set
@@ -51,7 +51,7 @@ object Parser {
       isFirst = false
 
       if (System.currentTimeMillis() - lastPrint > 1000) {
-        CustomLogger.logger.finest(s"CREATING HYPERGRAPH : n°$edgeCounter")
+        CustomLogger.logger.finest(s"CREATING HYPERGRAPH : n $edgeCounter")
         lastPrint = System.currentTimeMillis()
       }
     }
@@ -86,7 +86,7 @@ object Parser {
     var lastPrint = System.currentTimeMillis()
     CustomLogger.logger.info("BEGIN PARSING")
 
-    val lines = str.split('\n')
+    val lines = str.split(System.getProperty("line.separator"))
     var isFirst = true
     //For all the lines in the file
     for (line <- lines) {
@@ -99,7 +99,7 @@ object Parser {
       isFirst = false
 
       if (System.currentTimeMillis() - lastPrint > 1000) {
-        CustomLogger.logger.finest(s"CREATING HYPERGRAPH : n°$edgeCounter")
+        CustomLogger.logger.finest(s"CREATING HYPERGRAPH : n $edgeCounter")
         lastPrint = System.currentTimeMillis()
       }
     }

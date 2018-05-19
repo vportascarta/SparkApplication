@@ -1,6 +1,6 @@
 package org.apache.spark
 
-import ca.lif.sparklauncher.main.CustomLogger
+import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.Models.Hyperedge
 import org.apache.spark.rdd.RDD
 

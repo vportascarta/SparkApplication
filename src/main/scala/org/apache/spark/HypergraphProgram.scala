@@ -1,6 +1,6 @@
 package org.apache.spark
 
-import ca.lif.sparklauncher.main.CustomLogger
+import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.Models.Hypergraph
 
 import scala.collection.mutable.ArrayBuffer
@@ -70,7 +70,7 @@ object HypergraphProgram {
 
     // Looping the algo
     for (i <- 1 to loops) {
-      CustomLogger.logger.info(s"Test n°$i/$loops")
+      CustomLogger.logger.info(s"Test n $i/$loops")
 
       def get_result: Option[ArrayBuffer[Long]] = {
         if (algo == 1) {

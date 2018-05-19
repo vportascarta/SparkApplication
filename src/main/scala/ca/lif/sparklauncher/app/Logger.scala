@@ -1,4 +1,4 @@
-package ca.lif.sparklauncher.main
+package ca.lif.sparklauncher.app
 
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -9,10 +9,16 @@ object CustomLogger {
   logger.setUseParentHandlers(false)
 
   def setLogger(): Unit = {
-    val fh = new FileHandler(s"test_${System.currentTimeMillis()}.log")
-    val ch = new ConsoleHandler()
+    val fh = new FileHandler(s"spark_${System.currentTimeMillis()}.log")
     fh.setFormatter(new CustomFormatter())
-    ch.setFormatter(new CustomFormatter())
+
+    val ch = new StreamHandler(System.out, new CustomFormatter()) {
+      override def publish(record: LogRecord): Unit = {
+        super.publish(record)
+        flush()
+      }
+    }
+
     logger.addHandler(fh)
     logger.addHandler(ch)
     logger.setLevel(Level.FINEST)
@@ -22,6 +28,7 @@ object CustomLogger {
 class CustomFormatter extends Formatter {
   // Create a DateFormat to format the logger timestamp
   private val df = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss.SSS a")
+  private val linesep = System.getProperty("line.separator")
 
   override def format(record: LogRecord): String = {
     val log: StringBuilder = new StringBuilder(500)
@@ -29,7 +36,7 @@ class CustomFormatter extends Formatter {
     log.append("[").append(record.getLevel).append("] - ")
     log.append(formatMessage(record))
     log.append(" [").append(df.format(new Date(record.getMillis))).append("]")
-    log.append("\r\n")
+    log.append(linesep)
 
     log.toString()
   }

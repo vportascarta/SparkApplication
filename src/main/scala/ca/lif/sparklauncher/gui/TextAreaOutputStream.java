@@ -75,8 +75,7 @@ public class TextAreaOutputStream extends OutputStream {
 // STATIC MEMBERS
 // *************************************************************************************************
 
-    static class Appender
-            implements Runnable {
+    static class Appender implements Runnable {
         private final JTextArea textArea;
         private final int maxLines;                                                   // maximum lines allowed in text area
         private final LinkedList<Integer> lengths;                                                    // length of lines within text area

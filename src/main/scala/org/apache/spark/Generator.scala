@@ -1,6 +1,6 @@
 package org.apache.spark
 
-import ca.lif.sparklauncher.main.CustomLogger
+import ca.lif.sparklauncher.app.CustomLogger
 import com.google.common.hash.Hashing
 import org.apache.spark.Models.{Hyperedge, Hypergraph, TPair, Variable}
 
@@ -178,7 +178,7 @@ object Generator {
 
       for (edge <- hypergraph) {
         edge.listVertices.foreach(s => pw.write(s + " "))
-        pw.write("\n")
+        pw.write(System.getProperty("line.separator"))
       }
 
       pw.close()

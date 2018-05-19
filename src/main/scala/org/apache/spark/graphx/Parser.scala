@@ -42,7 +42,7 @@ object Parser {
 
     }
     //For all the lines in the file
-    for (line <- data.split("\n")) {
+    for (line <- data.split(System.getProperty("line.separator"))) {
       val e = treatLine(line)
       if (e.nonEmpty)
         edgesVector = edgesVector :+ e.get

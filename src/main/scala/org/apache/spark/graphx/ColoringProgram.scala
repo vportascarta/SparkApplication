@@ -1,6 +1,6 @@
 package org.apache.spark.graphx
 
-import ca.lif.sparklauncher.main.CustomLogger
+import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.{SparkConf, SparkContext}
 
 object ColoringProgram {
@@ -57,7 +57,7 @@ object ColoringProgram {
 
     // Looping the algo
     for (i <- 1 to loops) {
-      CustomLogger.logger.info(s"Test n°$i/$loops")
+      CustomLogger.logger.info(s"Test n $i/$loops")
 
       val res = coloring.execute(graph, max_iterations, sc)
 

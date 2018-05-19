@@ -9,7 +9,7 @@ libraryDependencies += "org.scala-lang" % "scala-reflect" % "2.11.12"
 libraryDependencies += "org.apache.spark" % "spark-core_2.11" % "2.3.0" exclude("org.apache.hadoop", "hadoop-yarn-server-web-proxy")
 libraryDependencies += "org.apache.spark" % "spark-graphx_2.11" % "2.3.0" exclude("org.apache.hadoop", "hadoop-yarn-server-web-proxy")
 
-mainClass in assembly := Some("ca.lif.sparklauncher.main.Application")
+mainClass in assembly := Some("ca.lif.sparklauncher.app.Application")
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard

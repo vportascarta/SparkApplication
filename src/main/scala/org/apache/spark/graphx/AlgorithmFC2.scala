@@ -1,6 +1,6 @@
 package org.apache.spark.graphx
 
-import ca.lif.sparklauncher.main.CustomLogger
+import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Models.Node
 

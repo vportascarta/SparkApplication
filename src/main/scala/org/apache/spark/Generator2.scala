@@ -4,7 +4,7 @@ import java.io.{ByteArrayOutputStream, PrintStream}
 import java.nio.charset.StandardCharsets
 import java.util.{ArrayList, List}
 
-import ca.lif.sparklauncher.main.CustomLogger
+import ca.lif.sparklauncher.app.CustomLogger
 import ca.uqac.lif.testing.tway.{FrontEnd, VertexListGenerator}
 import org.apache.spark.Models.Hypergraph
 
