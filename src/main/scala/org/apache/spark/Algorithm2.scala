@@ -1,5 +1,4 @@
 package org.apache.spark
-
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.Models.Hyperedge
 import org.apache.spark.rdd.RDD
@@ -7,6 +6,7 @@ import org.apache.spark.rdd.RDD
 import scala.collection.mutable.ArrayBuffer
 
 object Algorithm2 {
+
   //Returns an array that contains the chosen sets
   /*
   Some considerations :
@@ -15,6 +15,24 @@ object Algorithm2 {
   Repartition problems
   https://stackoverflow.com/questions/36414123/does-a-flatmap-in-spark-cause-a-shuffle
    */
+
+  /*
+
+  This is a Set Cover solver.
+  We get a hypergraph contained in a RDD.
+  We output a list of sets that covers all the hypergraph.
+
+  We checkpoint at each iteration for performance.
+  We generate and send a random tiebreaker. We do this in order to get better results with algorithm reruns.
+
+  The algorithm works like this :
+  Every hyperedge is a set of vertices (many vertex). A vertex is a test. It contains every variable, and their value.
+  We count how often a vertex appears. This is a big distributed map/reduce operation.
+  We select the vertex that appears the most often. Now, all hyperedges that contain this vertex, we can delete.
+  Why do we delete them? Well, since they contain this vertex, it means that they are already tested.
+
+  */
+
 
   def greedy_algorithm(sc: SparkContext, rdd: RDD[Hyperedge]): ArrayBuffer[Long] = {
     //sc.setCheckpointDir(".") //not used when using local checkpoint
@@ -82,8 +100,8 @@ object Algorithm2 {
         })
 
         //Manually unpersist unused RDDs
-        rdd_sommetsCount.unpersist(false)
-        counts.unpersist(false)
+       //rdd_sommetsCount.unpersist(false)
+       //counts.unpersist(false)
       }
     }
 
