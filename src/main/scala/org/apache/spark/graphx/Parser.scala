@@ -1,5 +1,4 @@
 package org.apache.spark.graphx
-
 import org.apache.spark.SparkContext
 import org.apache.spark.api.java.StorageLevels
 import org.apache.spark.graphx.Models.Node
@@ -13,8 +12,10 @@ object Parser {
   //  graph G {
   //    0 [label="p1 = 1 p2 = 1 p3 = 1 "];
   //    0 -- 1;
-  val defaultStorageLevelVertex: StorageLevel = StorageLevels.MEMORY_AND_DISK_SER
-  val defaultStorageLevelEdges: StorageLevel = StorageLevels.MEMORY_AND_DISK_SER
+
+  //modif : changement pour memory only
+  val defaultStorageLevelVertex: StorageLevel = StorageLevels.MEMORY_ONLY
+  val defaultStorageLevelEdges: StorageLevel = StorageLevels.MEMORY_ONLY
 
   def readGraphVizString(data: String, sc: SparkContext, partitions: Int, slVertex: StorageLevel = defaultStorageLevelVertex,
                          slEdges: StorageLevel = defaultStorageLevelEdges): Graph[Node, String] = {

@@ -34,13 +34,7 @@ class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
     def loop1(): Unit = {
       while (true) {
 
-        //Checkpoint the graph at each iteration, because we don't need it
-        if (checkpoint_counter == checkpointInterval) {
-          myGraph.checkpoint()
-          checkpoint_counter = 0
-        }
-
-       // myGraph.vertices.checkpoint()
+       // myGraph.checkpoint()
 
         CustomLogger.logger.info("ITERATION NUMERO : " + (counter + 1))
        // CustomLogger.logger.info("Checkpoint baby")
