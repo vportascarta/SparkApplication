@@ -1,11 +1,13 @@
 package org.apache.spark.graphx
-
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Models.{Message, Messages, Node}
 import org.apache.spark.util.LongAccumulator
 
 import scala.collection.mutable.ArrayBuffer
+
+/* This is the subgraphed version of the FC1 algorithm */
+
 
 class AlgorithmFC1 extends Algorithm {
   var NB_COULEUR_MAX = 0
@@ -222,6 +224,10 @@ class AlgorithmFC1 extends Algorithm {
             else true
           }
         )
+
+        //Print the size of the graph after our subgraph operation
+        CustomLogger.logger.info("NUMBER OF EDGES AFTER SUBGRAPH : " + (myGraph.edges.count() + 1))
+
 
       } //while loop
     } //inner function

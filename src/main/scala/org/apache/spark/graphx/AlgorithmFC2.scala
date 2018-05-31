@@ -4,12 +4,12 @@ import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Models.Node
 
+/* This version uses Subgraph at every iteration to remove knight nodes and knight edges*/
+
 class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
   def sendTieBreakValues(ctx: EdgeContext[Node, String, Long]): Unit = {
-    if (!ctx.srcAttr.knighthood && !ctx.dstAttr.knighthood) {
       ctx.sendToDst(ctx.srcAttr.tiebreakingValue)
       ctx.sendToSrc(ctx.dstAttr.tiebreakingValue)
-    }
   }
 
   def selectBest(tbValue1: Long, tbValue2: Long): Long = {
@@ -61,6 +61,22 @@ class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
         //Transformation
         myGraph = myGraph.joinVertices(messages)(
           (vid, sommet, bestId) => increaseColor(vid, sommet, bestId))
+
+        //We make the graph smaller
+        myGraph = myGraph.subgraph(
+          et => {
+            if (et.srcAttr.knighthood || et.dstAttr.knighthood)
+              false
+            else true
+          }, vpred = (vid, node_data) => {
+            if (node_data.knighthood == true) false
+            else true
+          }
+        )
+
+        //Print the size of the graph after our subgraph operation
+        CustomLogger.logger.info("NUMBER OF EDGES AFTER SUBGRAPH : " + (myGraph.edges.count() + 1))
+        CustomLogger.logger.info("NUMBER OF VERTICES AFTER SUBGRAPH : " + (myGraph.vertices.count() + 1))
 
       }
     }
