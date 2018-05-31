@@ -46,6 +46,7 @@ object Algorithm2 {
 
     def loop(): Unit = {
       while (true) {
+
         currentRDD.localCheckpoint()
 
         CustomLogger.logger.info(s"ITERATION NUMBER : $counter")
@@ -86,6 +87,12 @@ object Algorithm2 {
           else if (a._2 > b._2) retValue = a else retValue = b
           retValue
         })
+
+        //Do this every 2 iterations
+//        if (counter % 2 == 0) {
+//          currentRDD.localCheckpoint()
+//          CustomLogger.logger.info("Checkpoint")
+//        }
 
         //Keep our chosen Set in the log
         logEdgesChosen.append(best._1)

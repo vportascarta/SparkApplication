@@ -186,6 +186,9 @@ class AlgorithmFC1 extends Algorithm {
 
     def loop1(): Unit = {
       while (true) {
+
+        myGraph.checkpoint()
+
         val accum = sc.longAccumulator("changes")
         CustomLogger.logger.info("ITERATION NUMERO : " + (counter + 1))
         if (counter == maxIterations) return
@@ -207,10 +210,21 @@ class AlgorithmFC1 extends Algorithm {
           return
         }
         counter += 1
-        vertice_and_messages.unpersist(true)
 
-      }
-    }
+        //We make the graph smaller
+        myGraph = myGraph.subgraph(
+          et => {
+            if (et.srcAttr.knighthood || et.dstAttr.knighthood)
+              false
+            else true
+          }, vpred = (vid, node_data) => {
+            if (node_data.knighthood == true) false
+            else true
+          }
+        )
+
+      } //while loop
+    } //inner function
 
     loop1() //execute loop
     myGraph //return the result graph

@@ -4,8 +4,7 @@ import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Models.Node
 
-
-class AlgorithmFC2(checkpointInterval: Int) extends Algorithm {
+class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
   def sendTieBreakValues(ctx: EdgeContext[Node, String, Long]): Unit = {
     if (!ctx.srcAttr.knighthood && !ctx.dstAttr.knighthood) {
       ctx.sendToDst(ctx.srcAttr.tiebreakingValue)
@@ -32,38 +31,36 @@ class AlgorithmFC2(checkpointInterval: Int) extends Algorithm {
     var checkpoint_counter = 0
     val fields = new TripletFields(true, true, false) //join strategy
 
-
     def loop1(): Unit = {
       while (true) {
 
         //Checkpoint the graph at each iteration, because we don't need it
         if (checkpoint_counter == checkpointInterval) {
-          myGraph.vertices.checkpoint()
+          myGraph.checkpoint()
           checkpoint_counter = 0
         }
 
+       // myGraph.vertices.checkpoint()
+
         CustomLogger.logger.info("ITERATION NUMERO : " + (counter + 1))
+       // CustomLogger.logger.info("Checkpoint baby")
         counter += 1
-        checkpoint_counter += 1
+        //checkpoint_counter += 1
+
         if (counter == maxIterations) return
 
         val messages = myGraph.aggregateMessages[Long](
           sendTieBreakValues,
           selectBest,
           fields //use an optimized join strategy (we don't need the edge attribute)
-        ).cache() //call cache to keep messages in memory please
+        )
 
+        //Action. Stop when there are no more messages
         if (messages.isEmpty()) return
 
+        //Transformation
         myGraph = myGraph.joinVertices(messages)(
           (vid, sommet, bestId) => increaseColor(vid, sommet, bestId))
-
-        //Ignorez : Code de debug
-        // var printedGraph = myGraph.vertices.collect()
-        // printedGraph = printedGraph.sortBy(_._1)
-        // printedGraph.foreach(
-        //   elem => println(elem._2)
-        //  )
 
       }
     }

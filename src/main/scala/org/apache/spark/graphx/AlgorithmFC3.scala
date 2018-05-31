@@ -10,7 +10,7 @@ import org.apache.spark.util.LongAccumulator
 
 import scala.collection.mutable.ArrayBuffer
 
-class AlgorithmFC3(checkpointInterval: Int) extends Algorithm {
+class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
   var NB_COULEUR_MAX = 0
 
   //Envoyer les messages des deux côtés
@@ -221,17 +221,39 @@ class AlgorithmFC3(checkpointInterval: Int) extends Algorithm {
         // Loop cleanup
         vertice_and_messages.unpersist(blocking = false)
 
+
+        //We make the graph smaller
+//        myGraph = myGraph.subgraph(
+//          et => {
+//            if (et.srcAttr.knighthood == true || et.dstAttr.knighthood == true)
+//              false
+//            else true
+//          }, (vid, node_data) =>  {
+//            if (node_data.knighthood == true) false
+//            else true
+//          }
+//        )
+
+        //Remove the edge from the graph when there is a knight on it. This way we can remove a ton of edges from the graph.
+//        myGraph = myGraph.subgraph(
+//          et => {
+//            if (et.srcAttr.knighthood == true || et.dstAttr.knighthood == true)
+//              false
+//            else true
+//          }
+//        )
+
+
+
       }
     }
 
     loop1() //execute loop
-
     //Cleanup
-    messageCheckpointer.unpersistDataSet()
-    graphCheckpointer.unpersistDataSet()
-    graphCheckpointer.deleteAllCheckpointsButLast()
-    messageCheckpointer.deleteAllCheckpointsButLast()
-
+    //messageCheckpointer.unpersistDataSet()
+    //graphCheckpointer.unpersistDataSet()
+    //graphCheckpointer.deleteAllCheckpointsButLast()
+    //messageCheckpointer.deleteAllCheckpointsButLast()
     myGraph //return the result graph
   }
 }
