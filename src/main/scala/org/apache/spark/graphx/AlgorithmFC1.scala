@@ -7,7 +7,7 @@ import org.apache.spark.util.LongAccumulator
 import scala.collection.mutable.ArrayBuffer
 
 /* This is the subgraphed version of the FC1 algorithm */
-
+//removed subgraphs temporarily
 
 class AlgorithmFC1 extends Algorithm {
   var NB_COULEUR_MAX = 0
@@ -214,16 +214,16 @@ class AlgorithmFC1 extends Algorithm {
         counter += 1
 
         //We make the graph smaller
-        myGraph = myGraph.subgraph(
-          et => {
-            if (et.srcAttr.knighthood || et.dstAttr.knighthood)
-              false
-            else true
-          }, vpred = (vid, node_data) => {
-            if (node_data.knighthood == true) false
-            else true
-          }
-        )
+//        myGraph = myGraph.subgraph(
+//          et => {
+//            if (et.srcAttr.knighthood || et.dstAttr.knighthood)
+//              false
+//            else true
+//          }, vpred = (vid, node_data) => {
+//            if (node_data.knighthood == true) false
+//            else true
+//          }
+//        )
 
         //Print the size of the graph after our subgraph operation
         CustomLogger.logger.info("NUMBER OF EDGES AFTER SUBGRAPH : " + (myGraph.edges.count() + 1))
