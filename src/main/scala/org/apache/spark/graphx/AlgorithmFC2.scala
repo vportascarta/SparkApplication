@@ -8,8 +8,11 @@ import org.apache.spark.graphx.Models.Node
 
 class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
   def sendTieBreakValues(ctx: EdgeContext[Node, String, Long]): Unit = {
-      ctx.sendToDst(ctx.srcAttr.tiebreakingValue)
-      ctx.sendToSrc(ctx.dstAttr.tiebreakingValue)
+    if (ctx.srcAttr.knighthood == false && ctx.dstAttr.knighthood == false)
+      {
+        ctx.sendToDst(ctx.srcAttr.tiebreakingValue)
+        ctx.sendToSrc(ctx.dstAttr.tiebreakingValue)
+      }
   }
 
   def selectBest(tbValue1: Long, tbValue2: Long): Long = {
@@ -26,7 +29,8 @@ class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
   }
 
   def execute(graph: Graph[Models.Node, String], maxIterations: Int, sc: SparkContext): Graph[Node, String] = {
-    var myGraph = randomize_ids(graph, sc)
+    var myGraph = randomize_ids(graph, sc).cache()
+
     var counter = 0
     var checkpoint_counter = 0
     val fields = new TripletFields(true, true, false) //join strategy
@@ -34,7 +38,8 @@ class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
     def loop1(): Unit = {
       while (true) {
 
-       // myGraph.checkpoint()
+       // myGraph.vertices.localCheckpoint()
+       // myGraph.edges.localCheckpoint()
 
         CustomLogger.logger.info("ITERATION NUMERO : " + (counter + 1))
        // CustomLogger.logger.info("Checkpoint baby")
@@ -57,21 +62,20 @@ class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
           (vid, sommet, bestId) => increaseColor(vid, sommet, bestId))
 
         //We make the graph smaller
-        myGraph = myGraph.subgraph(
-          et => {
-            if (et.srcAttr.knighthood || et.dstAttr.knighthood)
-              false
-            else true
-          }, vpred = (vid, node_data) => {
-            if (node_data.knighthood == true) false
-            else true
-          }
-        )
+//        myGraph = myGraph.subgraph(
+//          et => {
+//            if (et.srcAttr.knighthood || et.dstAttr.knighthood)
+//              false
+//            else true
+//          }, vpred = (vid, node_data) => {
+//            if (node_data.knighthood == true) false
+//            else true
+//          }
+//        )
 
         //Print the size of the graph after our subgraph operation
-        CustomLogger.logger.info("NUMBER OF EDGES AFTER SUBGRAPH : " + (myGraph.edges.count() + 1))
-        CustomLogger.logger.info("NUMBER OF VERTICES AFTER SUBGRAPH : " + (myGraph.vertices.count() + 1))
-
+        //CustomLogger.logger.info("NUMBER OF EDGES AFTER SUBGRAPH : " + (myGraph.edges.count() + 1))
+        //CustomLogger.logger.info("NUMBER OF VERTICES AFTER SUBGRAPH : " + (myGraph.vertices.count() + 1))
       }
     }
 

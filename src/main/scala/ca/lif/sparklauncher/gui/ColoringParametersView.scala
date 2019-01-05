@@ -24,7 +24,7 @@ object ColoringParametersView extends GridPanel(10, 2) {
   val file_button = new Button("Choose...")
   var file_path = ""
   val file_is_graphviz = new CheckBox("File format is Graphviz")
-  val n_spinner = new CustomSpinner(new SpinnerNumberModel(3, 3, 100, 1))
+  val n_spinner = new CustomSpinner(new SpinnerNumberModel(3, 2, 100, 1))
   val t_spinner = new CustomSpinner(new SpinnerNumberModel(2, 2, 100, 1))
   val v_spinner = new CustomSpinner(new SpinnerNumberModel(2, 2, 100, 1))
 

@@ -14,19 +14,16 @@ class AlgorithmFC1 extends Algorithm {
 
   //Envoyer les messages des deux côtés
   def s1[A](ctx: EdgeContext[Node, String, Messages]): Unit = {
-    val srcinfo = new Messages()
-    srcinfo.append(Message(ctx.srcAttr.color, ctx.srcAttr.tiebreakingValue))
-    val dstinfo = new Messages()
-    dstinfo.append(Message(ctx.dstAttr.color, ctx.dstAttr.tiebreakingValue))
 
-    //If SRC is a knight, don't send him messages
-    if (!ctx.srcAttr.knighthood) {
-      ctx.sendToSrc(dstinfo)
-    }
-    //If DST is a knight, don't send him messages
-    if (!ctx.dstAttr.knighthood) {
-      ctx.sendToDst(srcinfo)
-    }
+    //if ((ctx.srcAttr.knighthood == false || ctx.dstAttr.knighthood == false) )
+    //{
+        val srcinfo = new Messages()
+       srcinfo.append(Message(ctx.srcAttr.color, ctx.srcAttr.tiebreakingValue))
+        val dstinfo = new Messages()
+        dstinfo.append(Message(ctx.dstAttr.color, ctx.dstAttr.tiebreakingValue))
+        ctx.sendToSrc(dstinfo)
+        ctx.sendToDst(srcinfo)
+    //}
   }
 
   /**
@@ -226,7 +223,7 @@ class AlgorithmFC1 extends Algorithm {
 //        )
 
         //Print the size of the graph after our subgraph operation
-        CustomLogger.logger.info("NUMBER OF EDGES AFTER SUBGRAPH : " + (myGraph.edges.count() + 1))
+        //CustomLogger.logger.info("NUMBER O : " + (myGraph.edges.count() + 1))
 
 
       } //while loop

@@ -50,7 +50,8 @@ object Parser {
     }
 
     val erdd = sc.makeRDD(edgesVector, partitions)
-    val graph: Graph[Node, String] = Graph.fromEdges(erdd, Node(), slVertex, slEdges).cache()
+
+    val graph: Graph[Node, String] = Graph.fromEdges(erdd, Node(), slVertex, slEdges)
 
     graph
   }
@@ -88,7 +89,7 @@ object Parser {
     }
 
     val erdd = sc.makeRDD(edgesVector, partitions)
-    val graph: Graph[Node, String] = Graph.fromEdges(erdd, Node(), slVertex, slEdges).cache()
+    val graph: Graph[Node, String] = Graph.fromEdges(erdd, Node(), slVertex, slEdges)
 
     graph
   }
