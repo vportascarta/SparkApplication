@@ -48,7 +48,7 @@ object ColoringProgram {
       if (algo_version == 1)
         new AlgorithmFC1
       else if (algo_version == 2)
-        new AlgorithmFC2(checkpoint_interval)
+        new AlgorithmFC2()
       else if (algo_version == 3)
         new AlgorithmFC3(checkpoint_interval)
       else
@@ -61,8 +61,11 @@ object ColoringProgram {
 
       val res = coloring.execute(graph, max_iterations, sc)
 
-      val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
-      CustomLogger.logger.info(result)
+      coloring.printGraphProper(  res)
+
+
+     // val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
+      //CustomLogger.logger.info(result)
     }
 
     sc.stop()

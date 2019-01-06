@@ -21,13 +21,13 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
     dstinfo.append(Message(ctx.dstAttr.color, ctx.dstAttr.tiebreakingValue))
 
     //If SRC is a knight, don't send him messages
-    if (!ctx.srcAttr.knighthood) {
+  //  if (!ctx.srcAttr.knighthood) {
       ctx.sendToSrc(dstinfo)
-    }
+  //  }
     //If DST is a knight, don't send him messages
-    if (!ctx.dstAttr.knighthood) {
+   // if (!ctx.dstAttr.knighthood) {
       ctx.sendToDst(srcinfo)
-    }
+   // }
   }
 
   /**
@@ -37,7 +37,7 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
     * @param  couleurs        Les couleurs des voisins
     * @return La couleur qui va être appliqué au sommet
     **/
-  def trouverPlusPetiteCouleur(vertexId: VertexId, couleurCourante: Int, couleurs: Messages): Int = {
+  def trouverPlusPetiteCouleur(couleurCourante: Int, couleurs: Messages): Int = {
     var couleur = couleurCourante
     var i = 1 //couleur courante qu'on check
     var j = 0 //iterateur du vecteur de couleurs
@@ -84,7 +84,7 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
   def choisirCouleur(vertexid: VertexId, sommetCourant: Node, voisins: Messages, accum: LongAccumulator): Node = {
 
     //Knight, on return tout de suite
-    if (sommetCourant.knighthood) return sommetCourant
+   // if (sommetCourant.knighthood) return sommetCourant
     //Aller chercher la couleur actuelle du sommet
 
     val couleurCourante = sommetCourant.color
@@ -96,17 +96,17 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
     //petit vertexid, comme ça il ne change pas de couleur
     val f = voisins.find(_.color == couleurCourante)
     if (f.nonEmpty) {
-      val vid_sommet = sommetCourant.tiebreakingValue
-      val vid_voisin = f.get.id
+      val tb_sommet = sommetCourant.tiebreakingValue
+      val tb_voisin = f.get.tiebreaker
       //On peut garder notre couleur pour cette itération si notre vertex id est plus petit que celui du voisin
-      if (vid_sommet < vid_voisin) {
+      if (tb_sommet < tb_voisin) {
         return Node(sommetCourant.id, color = sommetCourant.color, knighthood = true, tiebreakingValue = sommetCourant.tiebreakingValue)
       }
     }
-    //Sinon, on avait pas le vid le plus petit, nous on change de couleur.
+    //Sinon, on n'avait pas le tiebreaker le plus petit, nous on change de couleur.
     //Ou alors, la couleur n'existait pas dans les couleurs que les voisins envoient.
     //On choisit quand même une nouevlle couleur minimum (Il faut qu'elle soit mieux que notre couleur courante)
-    val c = trouverPlusPetiteCouleur(vertexid, couleurCourante, voisins)
+    val c = trouverPlusPetiteCouleur(couleurCourante, voisins)
 
     //La couleur change
     if (couleurCourante != c) {
@@ -114,11 +114,11 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
       return Node(sommetCourant.id, color = c, tiebreakingValue = sommetCourant.tiebreakingValue)
     }
 
-    //Pas de changement alors. Pas 100% sur qu'il peut devenir un knight tout de suite dans cette situation
+    //jamasi execute
     Node(sommetCourant.id, color = sommetCourant.color, knighthood = true, tiebreakingValue = sommetCourant.tiebreakingValue)
   }
 
-  //Merges two vectors of messages together. We keep the lowest vertexid for a given color
+  //Merges two vectors of messages together. We keep the lowest tiebreaker for a given color
   //https://en.wikipedia.org/wiki/Merge_sort (parallel)
   //O(n)
   def mergeMessages(a: Messages, b: Messages): Messages = {
@@ -134,8 +134,8 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
         //Comparer a et b
         val color_a = a(i).color
         val color_b = b(j).color
-        val vid_a = a(i).id
-        val vid_b = b(j).id
+        val tb_a = a(i).tiebreaker
+        val tb_b = b(j).tiebreaker
 
         //A = [1,2,4]  B=[2,3,4]  (Juste un vector de couleurs)
         //Cas 1 : Le vecteur A, a la position courante, a une plus petite couleur. On l'ajoute direct
@@ -147,7 +147,7 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
 
         //Cas 2 : Même couleur, il faut garder le plus petit vertexid
         else if (color_a == color_b) {
-          val biggestId = if (vid_a < vid_b) vid_a else vid_b
+          val biggestId = if (tb_a < tb_b) tb_a else tb_b
           new_vector.append(Message(color_a, biggestId))
           j += 1
           i += 1
@@ -182,6 +182,8 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
   def execute(graph: Graph[Node, String], maxIterations: Int, sc: SparkContext): Graph[Node, String] = {
     var myGraph = randomize_ids(graph, sc)
 
+    //printGraphProper(myGraph)
+
     NB_COULEUR_MAX = myGraph.vertices.count().toInt
     var counter = 0
 
@@ -206,7 +208,7 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
           (a, b) => mergeMessages(a, b)
         )
         messageCheckpointer.update(vertice_and_messages.asInstanceOf[RDD[Messages]])
-        vertice_and_messages.cache()
+        //vertice_and_messages.cache()
 
         //Join les resultats des messages avec choisirCouleur
         myGraph = myGraph.joinVertices(vertice_and_messages)((vid, sommet, messages) => choisirCouleur(vid, sommet, messages, accum))

@@ -92,10 +92,10 @@ class AlgorithmFC1 extends Algorithm {
     //petit vertexid, comme ça il ne change pas de couleur
     val f = voisins.find(_.color == couleurCourante)
     if (f.nonEmpty) {
-      val vid_sommet = sommetCourant.tiebreakingValue
-      val vid_voisin = f.get.id
+      val tb_sommet = sommetCourant.tiebreakingValue
+      val tb_voisin = f.get.tiebreaker
       //On peut garder notre couleur pour cette itération si notre vertex id est plus petit que celui du voisin
-      if (vid_sommet < vid_voisin) {
+      if (tb_sommet < tb_voisin) {
         return Node(sommetCourant.id, color = sommetCourant.color, knighthood = true, tiebreakingValue = sommetCourant.tiebreakingValue)
       }
     }
@@ -130,8 +130,8 @@ class AlgorithmFC1 extends Algorithm {
         //Comparer a et b
         val color_a = a(i).color
         val color_b = b(j).color
-        val vid_a = a(i).id
-        val vid_b = b(j).id
+        val vid_a = a(i).tiebreaker
+        val vid_b = b(j).tiebreaker
 
         //A = [1,2,4]  B=[2,3,4]  (Juste un vector de couleurs)
         //Cas 1 : Le vecteur A, a la position courante, a une plus petite couleur. On l'ajoute direct

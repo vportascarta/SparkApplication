@@ -51,9 +51,10 @@ object Parser {
 
     val erdd = sc.makeRDD(edgesVector, partitions)
 
-    val graph: Graph[Node, String] = Graph.fromEdges(erdd, Node(), slVertex, slEdges)
-
-    graph
+    val g: Graph[Node, String] = Graph.fromEdges(erdd, Node(), slVertex, slEdges)
+    //val myVertices = g.vertices.localCheckpoint()
+    //val myEdges = g.edges.localCheckpoint()
+    g
   }
 
   def readGraphVizFile(filename: String, sc: SparkContext, partitions: Int, slVertex: StorageLevel = defaultStorageLevelVertex,

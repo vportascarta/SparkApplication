@@ -22,6 +22,10 @@ abstract class Algorithm extends Serializable {
       val nts = vv._2.toString
       println("VertexId:" + vv._1 + s" $nts")
     })
+
+    println("Printing edges as well")
+    g.edges.collect().foreach(println)
+
   }
 
   def randomize_ids(g: Graph[Node, String], sc: SparkContext): Graph[Node, String] = {
@@ -41,8 +45,8 @@ abstract class Algorithm extends Serializable {
       (v._1, n)
     })
 
-    val gg = Graph(sc.makeRDD(vertices), g.edges)
-    //  printGraphProper(gg)
+    val vv = sc.makeRDD(vertices).localCheckpoint()
+    val gg = Graph(vv, g.edges)
     gg
   }
 

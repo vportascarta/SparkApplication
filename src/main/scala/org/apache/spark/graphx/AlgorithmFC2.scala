@@ -6,7 +6,7 @@ import org.apache.spark.graphx.Models.Node
 
 /* This version uses Subgraph at every iteration to remove knight nodes and knight edges*/
 
-class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
+class AlgorithmFC2() extends Algorithm {
   def sendTieBreakValues(ctx: EdgeContext[Node, String, Long]): Unit = {
     if (ctx.srcAttr.knighthood == false && ctx.dstAttr.knighthood == false)
       {
@@ -37,6 +37,8 @@ class AlgorithmFC2(checkpointInterval: Int = 4) extends Algorithm {
 
     def loop1(): Unit = {
       while (true) {
+
+        myGraph.checkpoint()
 
        // myGraph.vertices.localCheckpoint()
        // myGraph.edges.localCheckpoint()
