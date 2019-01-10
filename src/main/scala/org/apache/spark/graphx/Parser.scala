@@ -1,7 +1,7 @@
 package org.apache.spark.graphx
 import org.apache.spark.SparkContext
 import org.apache.spark.api.java.StorageLevels
-import org.apache.spark.graphx.Models.Node
+import org.apache.spark.graphx.Models.node
 import org.apache.spark.storage.StorageLevel
 
 import scala.io.Source
@@ -18,7 +18,7 @@ object Parser {
   val defaultStorageLevelEdges: StorageLevel = StorageLevels.MEMORY_ONLY
 
   def readGraphVizString(data: String, sc: SparkContext, partitions: Int, slVertex: StorageLevel = defaultStorageLevelVertex,
-                         slEdges: StorageLevel = defaultStorageLevelEdges): Graph[Node, String] = {
+                         slEdges: StorageLevel = defaultStorageLevelEdges): Graph[node, String] = {
     var edgesVector: Vector[Edge[String]] = Vector.empty[Edge[String]]
 
     //Comment inferer le return??
@@ -49,16 +49,16 @@ object Parser {
         edgesVector = edgesVector :+ e.get
     }
 
-    val erdd = sc.makeRDD(edgesVector, partitions)
+    val erdd = sc.makeRDD(edgesVector) //removed partition parameter here
 
-    val g: Graph[Node, String] = Graph.fromEdges(erdd, Node(), slVertex, slEdges)
+    val g: Graph[node, String] = Graph.fromEdges(erdd, node(), slVertex, slEdges)
     //val myVertices = g.vertices.localCheckpoint()
     //val myEdges = g.edges.localCheckpoint()
     g
   }
 
   def readGraphVizFile(filename: String, sc: SparkContext, partitions: Int, slVertex: StorageLevel = defaultStorageLevelVertex,
-                       slEdges: StorageLevel = defaultStorageLevelEdges): Graph[Node, String] = {
+                       slEdges: StorageLevel = defaultStorageLevelEdges): Graph[node, String] = {
     var edgesVector: Vector[Edge[String]] = Vector.empty[Edge[String]]
 
     //Comment inferer le return??
@@ -90,13 +90,13 @@ object Parser {
     }
 
     val erdd = sc.makeRDD(edgesVector, partitions)
-    val graph: Graph[Node, String] = Graph.fromEdges(erdd, Node(), slVertex, slEdges)
+    val graph: Graph[node, String] = Graph.fromEdges(erdd, node(), slVertex, slEdges)
 
     graph
   }
 
   //Lire le graphe
-  def readGraphFile(filename: String, sc: SparkContext, partitions: Int): Graph[Node, String] = {
+  def readGraphFile(filename: String, sc: SparkContext, partitions: Int): Graph[node, String] = {
 
 
     var edgesVector: Vector[Edge[String]] = Vector.empty[Edge[String]]
@@ -159,7 +159,7 @@ object Parser {
 
     }
     val erdd = sc.makeRDD(edgesVector, partitions)
-    val graph: Graph[Node, String] = Graph.fromEdges(erdd, Node()) //set all vertices to the color 1, initially
+    val graph: Graph[node, String] = Graph.fromEdges(erdd, node()) //set all vertices to the color 1, initially
 
     graph
   }

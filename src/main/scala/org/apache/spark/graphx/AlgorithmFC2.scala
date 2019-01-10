@@ -2,16 +2,16 @@ package org.apache.spark.graphx
 
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.Models.Node
+import org.apache.spark.graphx.Models.node
 
 /* This version uses Subgraph at every iteration to remove knight nodes and knight edges*/
 
 class AlgorithmFC2() extends Algorithm {
-  def sendTieBreakValues(ctx: EdgeContext[Node, String, Long]): Unit = {
+  def sendTieBreakValues(ctx: EdgeContext[node, String, Long]): Unit = {
     if (ctx.srcAttr.knighthood == false && ctx.dstAttr.knighthood == false)
       {
-        ctx.sendToDst(ctx.srcAttr.tiebreakingValue)
-        ctx.sendToSrc(ctx.dstAttr.tiebreakingValue)
+        ctx.sendToDst(ctx.srcAttr.tiebreakvalue)
+        ctx.sendToSrc(ctx.dstAttr.tiebreakvalue)
       }
   }
 
@@ -20,15 +20,15 @@ class AlgorithmFC2() extends Algorithm {
     else tbValue2
   }
 
-  def increaseColor(vid: VertexId, sommet: Node, bestTieBreak: Long): Node = {
-    if (sommet.tiebreakingValue < bestTieBreak)
-      Node(sommet.id, sommet.color, knighthood = true, sommet.tiebreakingValue)
+  def increaseColor(vid: VertexId, sommet: node, bestTieBreak: Long): node = {
+    if (sommet.tiebreakvalue < bestTieBreak)
+      node(sommet.id, sommet.color, knighthood = 1, sommet.tiebreakvalue)
     else {
-      Node(sommet.id, sommet.color + 1, knighthood = false, sommet.tiebreakingValue)
+      node(sommet.id, sommet.color + 1, knighthood = 0, sommet.tiebreakvalue)
     }
   }
 
-  def execute(graph: Graph[Models.Node, String], maxIterations: Int, sc: SparkContext): Graph[Node, String] = {
+  def execute(graph: Graph[Models.node, String], maxIterations: Int, sc: SparkContext): Graph[node, String] = {
     var myGraph = randomize_ids(graph, sc).cache()
 
     var counter = 0

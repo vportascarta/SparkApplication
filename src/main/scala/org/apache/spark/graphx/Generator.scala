@@ -7,10 +7,10 @@ import java.util.{ArrayList, List}
 import ca.lif.sparklauncher.app.CustomLogger
 import ca.uqac.lif.testing.tway._
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.Models.Node
+import org.apache.spark.graphx.Models.{node}
 
 object Generator {
-  def generateGraph(t: Int, n: Int, v: Int, sc: SparkContext, partitions: Int): Graph[Node, String] = {
+  def generateGraph(t: Int, n: Int, v: Int, sc: SparkContext, partitions: Int): Graph[node, String] = {
     CustomLogger.logger.info("BEGIN GENERATION")
 
     val domains = FrontEnd.createDomains(n, v)

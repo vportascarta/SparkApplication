@@ -6,10 +6,10 @@ object Models {
 
   //Having this inside GraphColoring caused so many problems omg
   //ids are randomized
-  case class Node(id: Int = 0, color: Int = 1, knighthood: Boolean = false, tiebreakingValue: VertexId = 1L) {
+  case class node(id: Long = 0, color: Int = 1, knighthood: Int = 0, tiebreakvalue: Long = 1L) {
 
     //Utile pour imprimer le graphe après
-    override def toString: String = s"id : $id color : $color knighthood : $knighthood tiebreaker : $tiebreakingValue"
+    override def toString: String = s"id : $id color : $color knighthood : $knighthood tiebreaker : $tiebreakvalue"
   }
 
   // to modify according to input graph

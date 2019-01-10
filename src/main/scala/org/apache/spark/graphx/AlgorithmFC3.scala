@@ -2,7 +2,7 @@ package org.apache.spark.graphx
 
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.Models.{Message, Messages, Node}
+import org.apache.spark.graphx.Models.{Message, Messages, node}
 import org.apache.spark.graphx.util.PeriodicGraphCheckpointer
 import org.apache.spark.rdd.RDD
 import org.apache.spark.rdd.util.PeriodicRDDCheckpointer
@@ -14,11 +14,11 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
   var NB_COULEUR_MAX = 0
 
   //Envoyer les messages des deux côtés
-  def s1[A](ctx: EdgeContext[Node, String, Messages]): Unit = {
+  def s1[A](ctx: EdgeContext[node, String, Messages]): Unit = {
     val srcinfo = new Messages()
-    srcinfo.append(Message(ctx.srcAttr.color, ctx.srcAttr.tiebreakingValue))
+    srcinfo.append(Message(ctx.srcAttr.color, ctx.srcAttr.tiebreakvalue))
     val dstinfo = new Messages()
-    dstinfo.append(Message(ctx.dstAttr.color, ctx.dstAttr.tiebreakingValue))
+    dstinfo.append(Message(ctx.dstAttr.color, ctx.dstAttr.tiebreakvalue))
 
     //If SRC is a knight, don't send him messages
   //  if (!ctx.srcAttr.knighthood) {
@@ -81,7 +81,7 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
     * @param  voisins       Nombre maximum de couleur disponible pour le graph
     * @return La couleur qui va être appliqué au sommet
     **/
-  def choisirCouleur(vertexid: VertexId, sommetCourant: Node, voisins: Messages, accum: LongAccumulator): Node = {
+  def choisirCouleur(vertexid: VertexId, sommetCourant: node, voisins: Messages, accum: LongAccumulator): node = {
 
     //Knight, on return tout de suite
    // if (sommetCourant.knighthood) return sommetCourant
@@ -96,11 +96,11 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
     //petit vertexid, comme ça il ne change pas de couleur
     val f = voisins.find(_.color == couleurCourante)
     if (f.nonEmpty) {
-      val tb_sommet = sommetCourant.tiebreakingValue
+      val tb_sommet = sommetCourant.tiebreakvalue
       val tb_voisin = f.get.tiebreaker
       //On peut garder notre couleur pour cette itération si notre vertex id est plus petit que celui du voisin
       if (tb_sommet < tb_voisin) {
-        return Node(sommetCourant.id, color = sommetCourant.color, knighthood = true, tiebreakingValue = sommetCourant.tiebreakingValue)
+        return node(sommetCourant.id, color = sommetCourant.color, knighthood = 1, tiebreakvalue = sommetCourant.tiebreakvalue)
       }
     }
     //Sinon, on n'avait pas le tiebreaker le plus petit, nous on change de couleur.
@@ -111,11 +111,11 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
     //La couleur change
     if (couleurCourante != c) {
       accum.add(1) //on ajoute a l'accumulateur du cluster
-      return Node(sommetCourant.id, color = c, tiebreakingValue = sommetCourant.tiebreakingValue)
+      return node(sommetCourant.id, color = c, tiebreakvalue = sommetCourant.tiebreakvalue)
     }
 
     //jamasi execute
-    Node(sommetCourant.id, color = sommetCourant.color, knighthood = true, tiebreakingValue = sommetCourant.tiebreakingValue)
+    node(sommetCourant.id, color = sommetCourant.color, knighthood = 1, tiebreakvalue = sommetCourant.tiebreakvalue)
   }
 
   //Merges two vectors of messages together. We keep the lowest tiebreaker for a given color
@@ -179,7 +179,7 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
   }
 
   //This is a helper function to execute aggregateMessages over a number of iterations on a certain graph
-  def execute(graph: Graph[Node, String], maxIterations: Int, sc: SparkContext): Graph[Node, String] = {
+  def execute(graph: Graph[node, String], maxIterations: Int, sc: SparkContext): Graph[node, String] = {
     var myGraph = randomize_ids(graph, sc)
 
     //printGraphProper(myGraph)
@@ -188,7 +188,7 @@ class AlgorithmFC3(checkpointInterval: Int = 4) extends Algorithm {
     var counter = 0
 
     //Gestion du GraphX Checkpointer et RDD checkpointer
-    val graphCheckpointer = new PeriodicGraphCheckpointer[Node, String](checkpointInterval, sc)
+    val graphCheckpointer = new PeriodicGraphCheckpointer[node, String](checkpointInterval, sc)
     graphCheckpointer.update(myGraph)
 
     // compute the messages

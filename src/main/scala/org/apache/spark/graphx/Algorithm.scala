@@ -1,14 +1,14 @@
 package org.apache.spark.graphx
 
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.Models.Node
+import org.apache.spark.graphx.Models.node
 
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
 
 abstract class Algorithm extends Serializable {
   //Returns the biggest color
-  def getBiggestColor(g: Graph[Node, String]): Int = {
+  def getBiggestColor(g: Graph[node, String]): Int = {
     val aa = g.vertices.collect()
     var maxColor = 0
     for (i <- aa) {
@@ -17,7 +17,7 @@ abstract class Algorithm extends Serializable {
     maxColor
   }
 
-  def printGraphProper(g: Graph[Node, String]) {
+  def printGraphProper(g: Graph[node, String]) {
     g.vertices.collect().sortBy(_._1).foreach(vv => {
       val nts = vv._2.toString
       println("VertexId:" + vv._1 + s" $nts")
@@ -28,7 +28,7 @@ abstract class Algorithm extends Serializable {
 
   }
 
-  def randomize_ids(g: Graph[Node, String], sc: SparkContext): Graph[Node, String] = {
+  def randomize_ids(g: Graph[node, String], sc: SparkContext): Graph[node, String] = {
     val count: Int = g.vertices.count().toInt
     //Preparer un graph random
     //Randomizer les ids
@@ -40,7 +40,7 @@ abstract class Algorithm extends Serializable {
     var cc = 0
     var vertices = g.vertices.collect()
     vertices = vertices.map(v => {
-      val n = Node(cc, tiebreakingValue = ids_random(cc))
+      val n = node(cc, tiebreakvalue = ids_random(cc))
       cc += 1
       (v._1, n)
     })
@@ -50,5 +50,5 @@ abstract class Algorithm extends Serializable {
     gg
   }
 
-  def execute(g: Graph[Node, String], maxIterations: Int, sc: SparkContext): Graph[Node, String]
+  def execute(g: Graph[node, String], maxIterations: Int, sc: SparkContext): Graph[node, String]
 }

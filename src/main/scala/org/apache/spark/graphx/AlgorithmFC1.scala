@@ -1,7 +1,7 @@
 package org.apache.spark.graphx
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.SparkContext
-import org.apache.spark.graphx.Models.{Message, Messages, Node}
+import org.apache.spark.graphx.Models.{Message, Messages, node}
 import org.apache.spark.util.LongAccumulator
 
 import scala.collection.mutable.ArrayBuffer
@@ -13,14 +13,14 @@ class AlgorithmFC1 extends Algorithm {
   var NB_COULEUR_MAX = 0
 
   //Envoyer les messages des deux côtés
-  def s1[A](ctx: EdgeContext[Node, String, Messages]): Unit = {
+  def s1[A](ctx: EdgeContext[node, String, Messages]): Unit = {
 
     //if ((ctx.srcAttr.knighthood == false || ctx.dstAttr.knighthood == false) )
     //{
         val srcinfo = new Messages()
-       srcinfo.append(Message(ctx.srcAttr.color, ctx.srcAttr.tiebreakingValue))
+       srcinfo.append(Message(ctx.srcAttr.color, ctx.srcAttr.tiebreakvalue))
         val dstinfo = new Messages()
-        dstinfo.append(Message(ctx.dstAttr.color, ctx.dstAttr.tiebreakingValue))
+        dstinfo.append(Message(ctx.dstAttr.color, ctx.dstAttr.tiebreakvalue))
         ctx.sendToSrc(dstinfo)
         ctx.sendToDst(srcinfo)
     //}
@@ -77,10 +77,10 @@ class AlgorithmFC1 extends Algorithm {
     * @param  voisins       Nombre maximum de couleur disponible pour le graph
     * @return La couleur qui va être appliqué au sommet
     **/
-  def choisirCouleur(vertexid: VertexId, sommetCourant: Node, voisins: Messages, accum: LongAccumulator): Node = {
+  def choisirCouleur(vertexid: VertexId, sommetCourant: node, voisins: Messages, accum: LongAccumulator): node = {
 
     //Knight, on return tout de suite
-    if (sommetCourant.knighthood) return sommetCourant
+    if (sommetCourant.knighthood == 1) return sommetCourant
     //Aller chercher la couleur actuelle du sommet
 
     val couleurCourante = sommetCourant.color
@@ -92,11 +92,11 @@ class AlgorithmFC1 extends Algorithm {
     //petit vertexid, comme ça il ne change pas de couleur
     val f = voisins.find(_.color == couleurCourante)
     if (f.nonEmpty) {
-      val tb_sommet = sommetCourant.tiebreakingValue
+      val tb_sommet = sommetCourant.tiebreakvalue
       val tb_voisin = f.get.tiebreaker
       //On peut garder notre couleur pour cette itération si notre vertex id est plus petit que celui du voisin
       if (tb_sommet < tb_voisin) {
-        return Node(sommetCourant.id, color = sommetCourant.color, knighthood = true, tiebreakingValue = sommetCourant.tiebreakingValue)
+        return node(sommetCourant.id, color = sommetCourant.color, knighthood = 1, tiebreakvalue = sommetCourant.tiebreakvalue)
       }
     }
     //Sinon, on avait pas le vid le plus petit, nous on change de couleur.
@@ -107,11 +107,11 @@ class AlgorithmFC1 extends Algorithm {
     //La couleur change
     if (couleurCourante != c) {
       accum.add(1) //on ajoute a l'accumulateur du cluster
-      return Node(sommetCourant.id, color = c, tiebreakingValue = sommetCourant.tiebreakingValue)
+      return node(sommetCourant.id, color = c, tiebreakvalue = sommetCourant.tiebreakvalue)
     }
 
     //Pas de changement alors. Pas 100% sur qu'il peut devenir un knight tout de suite dans cette situation
-    Node(sommetCourant.id, color = sommetCourant.color, knighthood = true, tiebreakingValue = sommetCourant.tiebreakingValue)
+    node(sommetCourant.id, color = sommetCourant.color, knighthood = 1, tiebreakvalue = sommetCourant.tiebreakvalue)
   }
 
   //Merges two vectors of messages together. We keep the lowest vertexid for a given color
@@ -175,7 +175,7 @@ class AlgorithmFC1 extends Algorithm {
   }
 
   //This is a helper function to execute aggregateMessages over a number of iterations on a certain graph
-  def execute(graph: Graph[Node, String], maxIterations: Int, sc: SparkContext): Graph[Node, String] = {
+  def execute(graph: Graph[node, String], maxIterations: Int, sc: SparkContext): Graph[node, String] = {
     val g = randomize_ids(graph, sc)
 
     val count = g.vertices.count().toInt

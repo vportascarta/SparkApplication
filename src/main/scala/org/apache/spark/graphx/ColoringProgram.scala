@@ -46,11 +46,11 @@ object ColoringProgram {
 
     val coloring = {
       if (algo_version == 1)
-        new AlgorithmFC1
+        new AlgoColoring()
       else if (algo_version == 2)
         new AlgorithmFC2()
       else if (algo_version == 3)
-        new AlgorithmFC3(checkpoint_interval)
+        new AlgoColoring()
       else
         throw new RuntimeException("Wrong version")
     }
@@ -60,12 +60,10 @@ object ColoringProgram {
       CustomLogger.logger.info(s"Test n $i/$loops")
 
       val res = coloring.execute(graph, max_iterations, sc)
+      //coloring.printGraphProper(  res)
 
-      coloring.printGraphProper(  res)
-
-
-     // val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
-      //CustomLogger.logger.info(result)
+      val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
+      CustomLogger.logger.info(result)
     }
 
     sc.stop()
