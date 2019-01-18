@@ -66,7 +66,7 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
       if (sommet.tiebreakvalue < bestTieBreak)
         return new node(sommet.id, sommet.color, knighthood = 1, sommet.tiebreakvalue)
       else {
-        return new node(sommet.id, sommet.color + 1, 0, sommet.tiebreakvalue)
+        sommet
       }
     }
 
