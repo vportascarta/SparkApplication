@@ -4,11 +4,11 @@ import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.SparkContext
 import org.apache.spark.graphx.Models.node
 
-/* This version uses Subgraph at every iteration to remove knight nodes and knight edges*/
 
 class AlgorithmFC2() extends Algorithm {
+
   def sendTieBreakValues(ctx: EdgeContext[node, String, Long]): Unit = {
-    if (ctx.srcAttr.knighthood == false && ctx.dstAttr.knighthood == false)
+    if (ctx.srcAttr.knighthood == 0 && ctx.dstAttr.knighthood == 0)
       {
         ctx.sendToDst(ctx.srcAttr.tiebreakvalue)
         ctx.sendToSrc(ctx.dstAttr.tiebreakvalue)
@@ -32,13 +32,13 @@ class AlgorithmFC2() extends Algorithm {
     var myGraph = randomize_ids(graph, sc).cache()
 
     var counter = 0
-    var checkpoint_counter = 0
     val fields = new TripletFields(true, true, false) //join strategy
 
     def loop1(): Unit = {
       while (true) {
 
-        myGraph.checkpoint()
+        myGraph.vertices.cache()
+        myGraph.edges.cache()
 
        // myGraph.vertices.localCheckpoint()
        // myGraph.edges.localCheckpoint()

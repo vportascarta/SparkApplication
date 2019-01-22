@@ -205,13 +205,20 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
     def execute(g: Graph[node, String], maxIterations: Int, sc : SparkContext): Graph[node, String] = {
 
       var myGraph = randomize_ids(g, sc).cache()
+
+
       var counter = 0
       val fields = new TripletFields(true, true, false) //join strategy
 
       def loop1: Unit = {
         while (true) {
 
-          //println("ITERATION NUMERO : " + (counter + 1))
+
+          myGraph.vertices.cache()
+          myGraph.edges.cache()
+          myGraph.cache()
+
+          println("ITERATION NUMERO : " + (counter + 1))
           counter += 1
           if (counter == maxIterations) return
 
@@ -264,7 +271,7 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
           }
 
 
-          //println("Printing graph again")
+          println("Printing graph again")
          // myGraph.vertices.collect().sortBy(_._1).foreach(println)
 
 

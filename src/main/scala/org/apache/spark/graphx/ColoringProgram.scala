@@ -4,6 +4,14 @@ import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.{SparkConf, SparkContext}
 
 object ColoringProgram {
+
+  def exec_for_gc(coloring : Algorithm, graph: Graph[Models.node, String] , sc : SparkContext): Unit =
+  {
+    val res = coloring.execute(graph, 1000, sc)
+    val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
+    CustomLogger.logger.info(result)
+  }
+
   def launch(filepath: String,
              is_graphviz: Boolean,
              t: Int,
@@ -29,7 +37,7 @@ object ColoringProgram {
     sc.setCheckpointDir("./")
     sc.setLogLevel("ERROR")
 
-    val graph = {
+    val graph: Graph[Models.node, String] = {
       if (filepath.isEmpty) {
         CustomLogger.logger.info(s"Config : T = $t / N = $n / V = $v")
         Generator.generateGraph(t, n, v, sc, partitions)
@@ -44,7 +52,7 @@ object ColoringProgram {
       }
     }
 
-    val coloring = {
+    val coloring: Algorithm = {
       if (algo_version == 1)
         new AlgoColoring()
       else if (algo_version == 2)
@@ -59,11 +67,14 @@ object ColoringProgram {
     for (i <- 1 to loops) {
       CustomLogger.logger.info(s"Test n $i/$loops")
 
-      val res = coloring.execute(graph, max_iterations, sc)
+      //val res = coloring.execute(graph, 1000, sc)
       //coloring.printGraphProper(  res)
 
-      val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
-      CustomLogger.logger.info(result)
+     // val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
+      //CustomLogger.logger.info(result)
+
+      exec_for_gc(coloring, graph, sc)
+      System.gc()
     }
 
     sc.stop()

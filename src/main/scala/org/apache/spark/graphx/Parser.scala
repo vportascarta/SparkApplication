@@ -4,6 +4,9 @@ import org.apache.spark.api.java.StorageLevels
 import org.apache.spark.graphx.Models.node
 import org.apache.spark.storage.StorageLevel
 
+
+import ca.lif.sparklauncher.app.CustomLogger
+
 import scala.io.Source
 
 //Helper functions inside this
@@ -16,6 +19,7 @@ object Parser {
   //modif : changement pour memory only
   val defaultStorageLevelVertex: StorageLevel = StorageLevels.MEMORY_ONLY
   val defaultStorageLevelEdges: StorageLevel = StorageLevels.MEMORY_ONLY
+
 
   def readGraphVizString(data: String, sc: SparkContext, partitions: Int, slVertex: StorageLevel = defaultStorageLevelVertex,
                          slEdges: StorageLevel = defaultStorageLevelEdges): Graph[node, String] = {
@@ -49,9 +53,18 @@ object Parser {
         edgesVector = edgesVector :+ e.get
     }
 
+
+
+
     val erdd = sc.makeRDD(edgesVector) //removed partition parameter here
 
     val g: Graph[node, String] = Graph.fromEdges(erdd, node(), slVertex, slEdges)
+
+    val num_vertices = g.vertices.count()
+    val num_edges = edgesVector.size
+
+    CustomLogger.logger.info(s"Graph size :  $num_vertices vertices and $num_edges edges")
+
     //val myVertices = g.vertices.localCheckpoint()
     //val myEdges = g.edges.localCheckpoint()
     g
