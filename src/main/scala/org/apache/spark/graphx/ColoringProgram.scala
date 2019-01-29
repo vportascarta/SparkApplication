@@ -36,46 +36,67 @@ object ColoringProgram {
     sc.hadoopConfiguration.set("fs.file.impl", classOf[org.apache.hadoop.fs.LocalFileSystem].getName)
     sc.setCheckpointDir("./")
     sc.setLogLevel("ERROR")
+//
+//    val graph: Graph[Models.node, String] = {
+//      if (filepath.isEmpty) {
+//        CustomLogger.logger.info(s"Config : T = $t / N = $n / V = $v")
+//        Generator.generateGraph(t, n, v, sc, partitions)
+//      }
+//      else {
+//        CustomLogger.logger.info(s"File : $filepath")
+//        // Parsing
+//        if (is_graphviz)
+//          Parser.readGraphVizFile(filepath, sc, partitions)
+//        else
+//          Parser.readGraphFile(filepath, sc, partitions)
+//      }
+//    }
+//
+//    val coloring: Algorithm = {
+//      if (algo_version == 1)
+//        new AlgoColoring()
+//      else if (algo_version == 2)
+//        new AlgorithmFC2()
+//      else if (algo_version == 3)
+//        new AlgoColoring()
+//      else
+//        throw new RuntimeException("Wrong version")
+    //
 
-    val graph: Graph[Models.node, String] = {
-      if (filepath.isEmpty) {
-        CustomLogger.logger.info(s"Config : T = $t / N = $n / V = $v")
-        Generator.generateGraph(t, n, v, sc, partitions)
-      }
-      else {
-        CustomLogger.logger.info(s"File : $filepath")
-        // Parsing
-        if (is_graphviz)
-          Parser.readGraphVizFile(filepath, sc, partitions)
+
+    //Knights and Peasants GraphX,  algo FC2 normal.
+    if (algo_version == 1 || algo_version ==2)
+    {
+      val graph = Generator.generateGraph(t, n, v, sc, partitions)
+      CustomLogger.logger.info(s"Config : T = $t / N = $n / V = $v")
+
+
+      val coloring: Algorithm = {
+        if (algo_version == 1)
+          new AlgoColoring()
+        else if (algo_version == 2)
+          new AlgorithmFC2()
         else
-          Parser.readGraphFile(filepath, sc, partitions)
+          throw new RuntimeException("Wrong version")
       }
-    }
 
-    val coloring: Algorithm = {
-      if (algo_version == 1)
-        new AlgoColoring()
-      else if (algo_version == 2)
-        new AlgorithmFC2()
-      else if (algo_version == 3)
-        new AlgoColoring()
-      else
-        throw new RuntimeException("Wrong version")
-    }
+        // Looping the algo
+        for (i <- 1 to loops) {
+          CustomLogger.logger.info(s"Test n $i/$loops")
 
-    // Looping the algo
-    for (i <- 1 to loops) {
-      CustomLogger.logger.info(s"Test n $i/$loops")
+          //val res = coloring.execute(graph, 1000, sc)
+          //coloring.printGraphProper(  res)
 
-      //val res = coloring.execute(graph, 1000, sc)
-      //coloring.printGraphProper(  res)
+          // val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
+          //CustomLogger.logger.info(result)
 
-     // val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
-      //CustomLogger.logger.info(result)
+          exec_for_gc(coloring, graph, sc)
+          System.gc()
+        }
 
-      exec_for_gc(coloring, graph, sc)
-      System.gc()
-    }
+      } //fin gros if coloring
+
+
 
     sc.stop()
   }

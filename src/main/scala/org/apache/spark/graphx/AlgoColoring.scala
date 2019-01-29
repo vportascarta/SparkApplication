@@ -210,6 +210,10 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
       var counter = 0
       val fields = new TripletFields(true, true, false) //join strategy
 
+      //We have to create the first knights
+
+
+
       def loop1: Unit = {
         while (true) {
 
