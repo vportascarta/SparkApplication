@@ -63,7 +63,7 @@ object ColoringProgram {
     val algo = new ColoringWithoutGraphX()
     //Generate tiebreakers
     var myVertices = random_tiebreakers(vertices)
-    val res: (algo.node, algo.edge) = algo.execute( vertices = sc.makeRDD(myVertices), edges = sc.makeRDD(edges), sc)
+    val res: (algo.node, algo.edge) = algo.execute( vertices = sc.makeRDD(myVertices), e = sc.makeRDD(edges), sc)
     val result = s"L'algorithme greedy a choisi ${getBiggestColor_2(res._1.collect())} couleurs."
     CustomLogger.logger.info(result)
   }

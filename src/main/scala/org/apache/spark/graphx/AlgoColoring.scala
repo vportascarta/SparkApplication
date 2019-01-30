@@ -26,7 +26,9 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
   import org.apache.spark.SparkConf
   import org.apache.spark.SparkContext
   import org.apache.spark.graphx.Models.node
+  import org.apache.spark.graphx.testPetersenGraph.{myEdges, myVertices, sc}
   import org.apache.spark.graphx.{Edge, EdgeContext, Graph, _}
+  import org.apache.spark.rdd.RDD
 
   import scala.collection.mutable
   import scala.collection.mutable.ArrayBuffer
@@ -149,7 +151,8 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
 
     def execute(g: Graph[node, String], maxIterations: Int, sc : SparkContext): Graph[node, String] = {
 
-      var myGraph = randomize_ids(g, sc).cache()
+      //var myGraph = randomize_ids(g, sc).cache()
+      var myGraph = g
 
       var counter = 0
       val fields = new TripletFields(true, true, false) //join strategy
@@ -187,8 +190,8 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
       })
 
 
-     // println("Initial iteration")
-     // myGraph.vertices.collect().sortBy(_._1).foreach(println)
+      println("Initial iteration")
+      myGraph.vertices.collect().sortBy(_._1).foreach(println)
 
 
       def loop1: Unit = {
@@ -210,8 +213,8 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
             fields //use an optimized join strategy (we don't need the edge attribute)
           )
 
-          //println("Best tiebreakers for vertices")
-          //messages.collect.sortBy( _._1) .foreach (println)
+          println("Best tiebreakers for vertices")
+          messages.collect.sortBy( _._1) .foreach (println)
 
           //This is our main exit condition. We exit if there are no more messages
           if (messages.isEmpty()) return
@@ -221,8 +224,11 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
             (vid, sommet, bestTb) => markKnight(vid, sommet, bestTb))
 
 
-         // println("Knight candidates")
-        //  myGraph.vertices.collect().sortBy(_._1).foreach(println)
+         println("Knight candidates")
+          myGraph.vertices.collect().sortBy(_._1).filter( e=> {
+            if (e._2.knighthood == 1) true
+            else false
+          })foreach(println)
 
           //The marked knights get to choose their best possible color
           //They choose from the lowest colors from adjacent knights
@@ -233,19 +239,19 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
           )
 
 
-         // println("Printing unavailable colors")
-         // unavailableColors.collect().foreach(println)
+         println("Printing unavailable colors")
+          unavailableColors.collect().foreach(println)
 
           //We give their colors to the new knights
             myGraph = myGraph.joinVertices(unavailableColors)(
               (vid, sommet, colors) => becomeKnight(vid, sommet, colors)
             )
 
-          //println("Printing graph again")
-         // myGraph.vertices.collect().sortBy(_._1).foreach(println)
+          println("Printing graph again")
+         myGraph.vertices.collect().sortBy(_._1).foreach(println)
 
           myGraph.vertices.take(1)
-          myGraph.checkpoint()
+         // myGraph.checkpoint()
 
 
         }
@@ -262,8 +268,8 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
         (vid, sommet, colors) => becomeKnight(vid, sommet, colors))
 
 
-     // println("Printing graph one last time")
-     // myGraph.vertices.collect().sortBy(_._1).foreach(println)
+      println("Printing graph one last time")
+      myGraph.vertices.collect().sortBy(_._1).foreach(println)
 
       myGraph //return the result graph
     }
@@ -272,7 +278,7 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
   object testPetersenGraph extends App {
     val conf = new SparkConf()
       .setAppName("Petersen Graph (10 nodes)")
-      .setMaster("local[1]")
+      .setMaster("local[*]")
     val sc = new SparkContext(conf)
     sc.setLogLevel("ERROR")
     sc.setCheckpointDir("./")
@@ -316,3 +322,86 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
     val res = algoColoring.execute(myGraph, 2000, sc)
     println("\nNombre de couleur trouv√©es: " + algoColoring.getChromaticNumber(res))
   }
+
+
+
+object testProblem2 extends App {
+
+  val conf = new SparkConf()
+    .setAppName("test a problem")
+    .setMaster("local[*]")
+  val sc = new SparkContext(conf)
+  sc.setLogLevel("ERROR")
+  sc.setCheckpointDir("./")
+
+  var ee = sc.makeRDD(Array(
+    Edge(2,1),
+    Edge(3,1),
+    Edge(3,2),
+    Edge(4,1),
+    Edge(4,2),
+    Edge(4,3),
+    Edge(5,2),
+    Edge(5,4),
+    Edge(6,1),
+    Edge(6,3),
+    Edge(6,5),
+    Edge(7,2),
+    Edge(7,4),
+    Edge(7,5),
+    Edge(7,6),
+    Edge(8,1),
+    Edge(8,3),
+    Edge(8,5),
+    Edge(8,6),
+    Edge(8,7),
+    Edge(9,3),
+    Edge(9,4),
+    Edge(9,7),
+    Edge(9,8),
+    Edge(10,1),
+    Edge(10,2),
+    Edge(10,7),
+    Edge(10,8),
+    Edge(10,9),
+    Edge(11,3),
+    Edge(11,4),
+    Edge(11,5),
+    Edge(11,6),
+    Edge(11,9),
+    Edge(11,10),
+    Edge(12,1),
+    Edge(12,2),
+    Edge(12,5),
+    Edge(12,6),
+    Edge(12,9),
+    Edge(12,10),
+    Edge(12,11)
+  ))
+
+  myEdges = ee.map( elem => {
+    Edge( elem.srcId, elem.dstId, "")
+  })
+
+  var myVertices: RDD[(VertexId, node)] = sc.makeRDD(Array(
+
+    (1L, new node(tiebreakvalue = 5)), //A
+    (2L, new node(tiebreakvalue = 4)), //B
+    (3L, new node(tiebreakvalue = 7)), //C
+    (4L, new node(tiebreakvalue = 12)), //D
+    (5L, new node(tiebreakvalue = 11)), //E
+    (6L, new node(tiebreakvalue = 8)), //F
+    (7L, new node(tiebreakvalue = 1)), //G
+    (8L, new node(tiebreakvalue = 2)), //H
+    (9L, new node(tiebreakvalue = 9)), //I
+    (10L, new node(tiebreakvalue = 6)), //J
+    (11L, new node(tiebreakvalue = 3)), //I
+    (12L, new node(tiebreakvalue = 10)))) //I
+
+
+  var myGraph = Graph(myVertices, myEdges)
+  val algoColoring = new AlgoColoring()
+  val res = algoColoring.execute(myGraph, 2000, sc)
+  println("\nNombre de couleur trouv√©es: " + algoColoring.getChromaticNumber(res))
+
+}

@@ -217,7 +217,7 @@ class ColoringWithoutGraphX extends Serializable
  }
 
 
- def execute(vertices : node, edges : edge,  context : SparkContext) :  graph =
+ def execute(vertices : node, e : edge,  context : SparkContext) :  graph =
  {
   var counter = 0
   var myVertices: node = vertices.cache()
@@ -226,8 +226,8 @@ class ColoringWithoutGraphX extends Serializable
   //We exchange tiebreakers
   counter += 1
   println("Iteration numero : " + counter)
-  val msg1 = tieBreakerMessages(myVertices, edges, context)
-  if (msg1.isEmpty) return (myVertices,edges) //condition de sortie ici
+  val msg1 = tieBreakerMessages(myVertices, e, context)
+  if (msg1.isEmpty) return (myVertices,e) //condition de sortie ici
 
   //We make the first knights
   myVertices = makeKnightCandidates( true, myVertices, msg1.get, context)
@@ -250,32 +250,32 @@ class ColoringWithoutGraphX extends Serializable
    // println("debugging graph at the start of the iterations")
   //  myVertices.collect().sortBy(_._1).foreach(println)
 
-    val msg1 = tieBreakerMessages(myVertices, edges, context)
+    val msg1 = tieBreakerMessages(myVertices, e, context)
     if (msg1.isEmpty) return
 
     //We select the knight candidates
     myVertices = makeKnightCandidates( false, myVertices, msg1.get, context)
 
     //We select a color for them
-    myVertices = selectKnightColor(myVertices, edges, context, false)
+    myVertices = selectKnightColor(myVertices, e, context, false)
 
    } // while loop
 
-   (myVertices, edges)//while loop ends here
+   (myVertices, e)//while loop ends here
   } //dummy function ends here
 
   //Color the last vertices before end
   //These vertices are isolated and can take their best available color
 
   //Choose a color here
-  myVertices = selectKnightColor( myVertices, edges, context, true)
+  myVertices = selectKnightColor( myVertices, e, context, true)
 
   //Final graph print
- // println("Final graph")
- // myVertices.collect().sortBy(_._1).foreach(println)
+ println("Final graph")
+ myVertices.collect().sortBy(_._1).foreach(println)
 
   //Return
-  ( myVertices, edges)
+  ( myVertices, e)
  }
 }
 
@@ -307,7 +307,7 @@ object testPetersenGraph2 extends App {
   (9L, new node_data(tiebreakvalue = 9)), //I
   (10L, new node_data(tiebreakvalue = 10)))) //J
 
- var myEdges = sc.makeRDD(Array(
+ var myEdges: RDD[edge_data] = sc.makeRDD(Array(
   edge_data(1L, 2L), edge_data(1L, 3L), edge_data(1L, 6L),
   edge_data(2L, 7L), edge_data(2L, 8L),
   edge_data(3L, 4L), edge_data(3L, 9L),
@@ -322,4 +322,80 @@ object testPetersenGraph2 extends App {
  val coloring = new ColoringWithoutGraphX()
  val res = coloring.execute( myVertices, myEdges, sc)
  //println("\nNombre de couleur trouvées: " + algoColoring.getChromaticNumber(res))
+}
+
+
+object testProblem extends App {
+
+ val conf = new SparkConf()
+   .setAppName("test a problem")
+   .setMaster("local[*]")
+ val sc = new SparkContext(conf)
+ sc.setLogLevel("ERROR")
+
+ var myEdges: RDD[edge_data] = sc.makeRDD(Array(
+ edge_data(2,1),
+ edge_data(3,1),
+ edge_data(3,2),
+ edge_data(4,1),
+ edge_data(4,2),
+ edge_data(4,3),
+ edge_data(5,2),
+ edge_data(5,4),
+ edge_data(6,1),
+ edge_data(6,3),
+ edge_data(6,5),
+ edge_data(7,2),
+ edge_data(7,4),
+ edge_data(7,5),
+ edge_data(7,6),
+ edge_data(8,1),
+ edge_data(8,3),
+ edge_data(8,5),
+ edge_data(8,6),
+ edge_data(8,7),
+ edge_data(9,3),
+ edge_data(9,4),
+ edge_data(9,7),
+ edge_data(9,8),
+ edge_data(10,1),
+ edge_data(10,2),
+ edge_data(10,7),
+ edge_data(10,8),
+ edge_data(10,9),
+ edge_data(11,3),
+ edge_data(11,4),
+ edge_data(11,5),
+ edge_data(11,6),
+ edge_data(11,9),
+ edge_data(11,10),
+ edge_data(12,1),
+ edge_data(12,2),
+ edge_data(12,5),
+ edge_data(12,6),
+ edge_data(12,9),
+ edge_data(12,10),
+ edge_data(12,11)
+ ))
+
+
+ var myVertices: RDD[(Long, node_data)] = sc.makeRDD(Array(
+
+  (1L, new node_data(tiebreakvalue = 5)), //A
+  (2L, new node_data(tiebreakvalue = 4)), //B
+  (3L, new node_data(tiebreakvalue = 7)), //C
+  (4L, new node_data(tiebreakvalue = 12)), //D
+  (5L, new node_data(tiebreakvalue = 11)), //E
+  (6L, new node_data(tiebreakvalue = 8)), //F
+  (7L, new node_data(tiebreakvalue = 1)), //G
+  (8L, new node_data(tiebreakvalue = 2)), //H
+  (9L, new node_data(tiebreakvalue = 9)), //I
+  (10L, new node_data(tiebreakvalue = 6)), //J
+ (11L, new node_data(tiebreakvalue = 3)), //I
+ (12L, new node_data(tiebreakvalue = 10)))) //I
+
+
+ val coloring = new ColoringWithoutGraphX()
+ val res = coloring.execute( myVertices, myEdges, sc)
+
 }
