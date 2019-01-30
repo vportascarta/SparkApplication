@@ -28,7 +28,9 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
   import org.apache.spark.graphx.Models.node
   import org.apache.spark.graphx.{Edge, EdgeContext, Graph, _}
 
+  import scala.collection.mutable
   import scala.collection.mutable.ArrayBuffer
+  import scala.collection.mutable.SortedSet
 
   //tiebreak value is generated randomly before every graph iteration
 //  class node(val id: Long, val color: Int = 1, val knighthood: Int = 0, val tiebreakvalue: Long = 1L) extends Serializable {
@@ -72,7 +74,7 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
 
     //We go through all the edges.
     //When an edge connects a knight to a knight candidate, we send the color
-    def sendKnightColors(ctx : EdgeContext[node, String, ArrayBuffer[Int]]) : Unit =
+    def sendKnightColors(ctx : EdgeContext[node, String, SortedSet[Int]]) : Unit =
     {
       val srcColor = ctx.srcAttr.color
       val dstColor = ctx.dstAttr.color
@@ -80,36 +82,32 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
       //SRC is knight candidate and DST is knight
       if (ctx.srcAttr.knighthood == 1 && ctx.dstAttr.knighthood == 2) {
 
-        val t = new ArrayBuffer[Int]()
-        t += dstColor
+        val t =  SortedSet[Int](dstColor)
         ctx.sendToSrc( t)
       }
 
       //DST is knight candidate and SRC is knight
       if (ctx.dstAttr.knighthood == 1 && ctx.srcAttr.knighthood == 2) {
-        val v = new ArrayBuffer[Int]()
-        v += srcColor
+        val v = SortedSet[Int](srcColor)
         ctx.sendToDst(  v)
       }
 
     }
 
     //Send final colors for the last knights
-    def sendFinalColors(ctx : EdgeContext[node, String, ArrayBuffer[Int]]) : Unit =
+    def sendFinalColors(ctx : EdgeContext[node, String, SortedSet[Int]]) : Unit =
     {
       val srcColor = ctx.srcAttr.color
       val dstColor = ctx.dstAttr.color
 
       if (ctx.srcAttr.knighthood == 0) {
-        val t = new ArrayBuffer[Int]()
-        t += dstColor
+        val t = SortedSet(dstColor)
         ctx.sendToSrc(t)
       }
 
       if (ctx.dstAttr.knighthood == 0) {
-        val v = new ArrayBuffer[Int]()
-        v += srcColor
-        ctx.sendToDst(v)
+        val t = SortedSet(srcColor)
+        ctx.sendToDst(t)
       }
     }
 
@@ -117,87 +115,34 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
     //We merge two colors vectors together. We just want to have our colors in order, so that selecting the lowest possible color is very fast.
     //https://en.wikipedia.org/wiki/Merge_sort (parallel)
     //O(n)
-    def mergeColors(a: ArrayBuffer[Int], b: ArrayBuffer[Int]): ArrayBuffer[Int] = {
-      val new_vector = new ArrayBuffer[Int]()
-      var i = 0 //index de la map a
-      var j = 0 //index de la map b
-
-      def func(): Unit = {
-        while (true) {
-          if (i == a.length || a.isEmpty) return
-          if (j == b.length || b.isEmpty) return
-
-          //Comparer a et b
-          val color_a = a(i)
-          val color_b = b(j)
-
-          //A = [1,2,4]  B=[2,3,4]  (Juste un vector de couleurs)
-          //Cas 1 : Le vecteur A, a la position courante, a une plus petite couleur. On l'ajoute direct
-          if (color_a < color_b) {
-            //Ajouter la couleur dans le new vector
-            new_vector.append(color_a)
-            i += 1
-          }
-
-          //Cas 2 : M√™me couleur. On fait avancer les deux vecteurs
-          else if (color_a == color_b) {
-            new_vector.append(color_a)
-            j += 1
-            i += 1
-          }
-
-          //Case 3 : B a la plus petite couleur.
-          else {
-            new_vector.append(color_b)
-            j += 1
-          }
-        }
-      } //fin func
-
-      //Start the loop process
-      func()
-
-      //Deverser le restant de A dans newvector
-      while (i != a.length) {
-        new_vector.append(a(i))
-        i += 1
-      }
-
-      //Deverser le restant de B dans newvector
-      while (j != b.length) {
-        new_vector.append(b(j))
-        j += 1
-      }
-      //Return le resultat
-      new_vector
+    def mergeColors(a: SortedSet[Int], b: SortedSet[Int]): SortedSet[Int] =
+    {
+        a union b
     }
 
     //Become a knight
-    def becomeKnight(myid: Long, myNode: node, colors: ArrayBuffer[Int]): node =
+    def becomeKnight(myid: Long, myNode: node, colors: SortedSet[Int]): node =
     {
-      var newColor = 1
-      var index = 0
 
-      //Loop function with return acting as a break statement.
-      def loop(): Unit = {
-        while (true) {
-          //Check for empty array, or for end.
-          if (index == colors.length || colors.isEmpty) return
+      var counter = 1
+      var bestColor = 0
 
-          //If color is present in the array, we keep searching for an empty slot
-          if (newColor == colors(index)) {
-            newColor += 1
-            index += 1
-          }
-          else {
+      def looop() : Unit =  {
+        for (i <- colors) {
+
+          if (i != counter) {
+            bestColor = i
             return
           }
+          counter += 1
+          bestColor = i+1
         }
-      }
+      } //function end
 
-      loop()
+      looop()
 
-      var newNode = new node(id = myNode.id, knighthood = 2, color = newColor, tiebreakvalue = myNode.tiebreakvalue)
+
+      var newNode = new node(id = myNode.id, knighthood = 2, color = bestColor, tiebreakvalue = myNode.tiebreakvalue)
       newNode
     }
 
@@ -206,12 +151,44 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
 
       var myGraph = randomize_ids(g, sc).cache()
 
-
       var counter = 0
       val fields = new TripletFields(true, true, false) //join strategy
 
-      //We have to create the first knights
+      println("ITERATION NUMERO : " + (counter + 1))
+      counter += 1
 
+      //We have to create the first knights
+      val msg1 = myGraph.aggregateMessages[Long](
+        sendtiebreakvalues,
+        selectBest,
+        fields //use an optimized join strategy (we don't need the edge attribute)
+      )
+
+      //This is our main exit condition. We exit if there are no more messages
+      if (msg1.isEmpty()) return myGraph
+
+      //Make our vertices into knight candidates
+      myGraph = myGraph.joinVertices(msg1)(
+        (vid, sommet, bestTb) => markKnight(vid, sommet, bestTb))
+
+
+      //The marked knights get to choose their best possible color
+      //They choose from the lowest colors from adjacent knights
+      val unavailableColors = myGraph.aggregateMessages[SortedSet[Int]](
+        sendKnightColors,
+        mergeColors,
+        fields
+      )
+
+      myGraph = myGraph.mapVertices( (id, node) => {
+        if (node.knighthood == 1)
+          new node(id,1, knighthood = 2, tiebreakvalue = node.tiebreakvalue)
+        else node
+      })
+
+
+     // println("Initial iteration")
+     // myGraph.vertices.collect().sortBy(_._1).foreach(println)
 
 
       def loop1: Unit = {
@@ -244,47 +221,33 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
             (vid, sommet, bestTb) => markKnight(vid, sommet, bestTb))
 
 
-          //myGraph.vertices.collect().sortBy(_._1).foreach(println)
+         // println("Knight candidates")
+        //  myGraph.vertices.collect().sortBy(_._1).foreach(println)
 
           //The marked knights get to choose their best possible color
           //They choose from the lowest colors from adjacent knights
-          val unavailableColors = myGraph.aggregateMessages[ArrayBuffer[Int]](
+          val unavailableColors = myGraph.aggregateMessages[SortedSet[Int]](
             sendKnightColors,
             mergeColors,
             fields
           )
 
-          //println("Printing unavailable colors")
-          //unavailableColors.collect().sortBy(_._1).foreach(println)
 
-          //If this is the first iteration, we have to proceed differently. There are no true knights yet.
-          if (counter == 1) {
-            myGraph = myGraph.mapVertices( (id, node) => {
-              if (node.knighthood == 1)
-                new node(id, node.color, knighthood = 2, tiebreakvalue = node.tiebreakvalue)
-              else node
-            })
-          }
+         // println("Printing unavailable colors")
+         // unavailableColors.collect().foreach(println)
 
           //We give their colors to the new knights
-          else
-          {
             myGraph = myGraph.joinVertices(unavailableColors)(
               (vid, sommet, colors) => becomeKnight(vid, sommet, colors)
             )
-          }
 
-
-          println("Printing graph again")
+          //println("Printing graph again")
          // myGraph.vertices.collect().sortBy(_._1).foreach(println)
 
+          myGraph.vertices.take(1)
+          myGraph.checkpoint()
 
-          //Ignorez : Code de debug
-          //var printedGraph = myGraph.vertices.collect()
-          // printedGraph = printedGraph.sortBy(_._1)
-          //  printedGraph.foreach(
-          //    elem => println(elem._2)
-          //   )
+
         }
       }
 
@@ -293,7 +256,7 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
       //When the graph no longer sends messages, we are almost done.
       //We still have to optimize the last vertices who aren't knights yet.
 
-      val lastKnights = myGraph.aggregateMessages[ArrayBuffer[Int]](sendFinalColors, mergeColors, fields)
+      val lastKnights = myGraph.aggregateMessages[SortedSet[Int]](sendFinalColors, mergeColors, fields)
 
       myGraph = myGraph.joinVertices(lastKnights)(
         (vid, sommet, colors) => becomeKnight(vid, sommet, colors))
@@ -312,6 +275,7 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
       .setMaster("local[1]")
     val sc = new SparkContext(conf)
     sc.setLogLevel("ERROR")
+    sc.setCheckpointDir("./")
     var myVertices = sc.makeRDD(Array(
       //      (1L, new node(id = 1, tiebreakvalue = 3)), //A
       //      (2L, new node(id = 2, tiebreakvalue = 5)), //B
