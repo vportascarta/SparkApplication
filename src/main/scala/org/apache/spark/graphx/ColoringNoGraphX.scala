@@ -283,6 +283,10 @@ class BCastColoring extends Serializable
      myVertices.collect() sortBy(_._1)foreach(println)
     }
 
+    //Checkpoint to avoid StackOverflow
+    myVertices = myVertices.localCheckpoint()
+
+
    } // while loop
 
    (myVertices, e)//while loop ends here

@@ -38,11 +38,17 @@ object HypergraphProgram {
     CustomLogger.logger.info(s"Parameters : partitions = $partitions")
     CustomLogger.logger.info(s"Config : T = $t / N = $n / V = $v")
 
+
+    //Force system to use algo 2 all the time
+    var myalgo = 2
+
     def get_hypergraph: Option[Hypergraph] = {
-      if (algo == 1) {
+
+
+      if (myalgo == 1) {
         Some(Generator.generateHypergraph(t, n, v))
       }
-      else if (algo == 2) {
+      else if (myalgo == 2) {
         Some(Generator2.generateHypergraph(t, n, v))
       }
       else None
@@ -50,7 +56,7 @@ object HypergraphProgram {
 
     val hypergraph = get_hypergraph.get
 
-    launch(algo, hypergraph, partitions, loops)
+    launch(myalgo, hypergraph, partitions, loops)
 
   }
 

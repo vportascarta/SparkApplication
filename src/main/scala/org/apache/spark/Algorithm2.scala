@@ -42,12 +42,12 @@ object Algorithm2 {
     val logEdgesChosen = ArrayBuffer[Long]()
     var counter = 1
 
-    currentRDD.localCheckpoint()
+    //currentRDD.localCheckpoint()
 
     def loop(): Unit = {
       while (true) {
 
-        currentRDD.localCheckpoint()
+        currentRDD =  currentRDD.localCheckpoint()
 
         CustomLogger.logger.info(s"ITERATION NUMBER : $counter")
         counter += 1
@@ -68,6 +68,7 @@ object Algorithm2 {
         })
 
         //Calculate the counts for each vertex (Transformation)
+        //todo : maybe aggregateByKey is slightly faster?
         val counts = rdd_sommetsCount.reduceByKey((a, b) => a + b)
 
         //Send random tiebreaker. Closest Long gets chosen in case of a tie.
