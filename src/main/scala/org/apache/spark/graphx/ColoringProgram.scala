@@ -32,8 +32,8 @@ object ColoringProgram {
       (v._1, n)
     })
 
-    println("Print le array avec random tiebreakers")
-    vertices.sortBy(_._1).foreach( println)
+  //  println("Print le array avec random tiebreakers")
+   // vertices.sortBy(_._1).foreach( println)
 
 
     vertices
@@ -60,7 +60,7 @@ object ColoringProgram {
 
   def exec_for_gc2( vertices: Array[(Long, node_data)], edges: Vector[edge_data], sc : SparkContext): Unit =
   {
-    val algo = new ColoringWithoutGraphX()
+    val algo = new BCastColoring()
     //Generate tiebreakers
     var myVertices = random_tiebreakers(vertices)
     val res: (algo.node, algo.edge) = algo.execute( vertices = sc.makeRDD(myVertices), e = sc.makeRDD(edges), sc)
@@ -130,7 +130,7 @@ object ColoringProgram {
 
       val coloring: Algorithm = {
         if (algo_version == 1)
-          new AlgoColoring()
+          new KP_Coloring()
         else if (algo_version == 2)
           new AlgorithmFC2()
         else

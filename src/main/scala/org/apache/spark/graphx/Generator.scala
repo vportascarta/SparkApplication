@@ -102,14 +102,12 @@ object Generator {
     })
 
 
-    println("Print le resultat de la generation")
+   // println("Print le resultat de la generation")
+    //println("Les edges : ")
+   // edgesVector.foreach(println)
 
-    println("Les edges : ")
-    edgesVector.foreach(println)
-
-
-    println("La map")
-    vertices.toArray.sortBy(_._1).foreach( println)
+    //println("La map")
+    //vertices.toArray.sortBy(_._1).foreach( println)
 
 
     (vertices.toArray, edgesVector)

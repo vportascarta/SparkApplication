@@ -6,6 +6,7 @@ import org.apache.spark.SparkContext
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import scala.collection.mutable.ArrayBuffer
+import scala.collection.mutable.SortedSet
 
 case class node_data(knighthood : Int = 0, color : Int = 0, tiebreakvalue : Int = 0)
 {
@@ -17,11 +18,16 @@ case class edge_data(src : Long, dst : Long)
 
 //todo : les fonctions knight candidate et tiebreaker peuvent etre combinées. Ça fait + de sens ensemble je pense.
 
-class ColoringWithoutGraphX extends Serializable
+class BCastColoring extends Serializable
 {
+
+ var debug = false
+
  type node = RDD[Tuple2[Long, node_data]]
  type edge = RDD[edge_data]
  type graph = Tuple2[node, edge]
+
+
 
  //This function generates the tiebreaker messages
  //It returns an Option RDD of messages
@@ -157,12 +163,11 @@ class ColoringWithoutGraphX extends Serializable
   })
 
   //http://codingjunkie.net/spark-agr-by-key/
-  val colorList = ArrayBuffer[Int]()
-  val addToList = (s: ArrayBuffer[Int], v: Int) => s += v
-  val mergeLists = (p1: ArrayBuffer[Int], p2: ArrayBuffer[Int]) => p1 ++= p2
+  val colorList = SortedSet[Int]()
+  val addToList = (s: SortedSet[Int], v: Int) => s += v
+  val mergeLists = (p1: SortedSet[Int], p2: SortedSet[Int]) => p1 | p2
 
   val colors = colormsgs.aggregateByKey(colorList)(addToList,mergeLists)
-
 
   //debug tiebreaker_messages
  // println("printing available colors")
@@ -172,28 +177,26 @@ class ColoringWithoutGraphX extends Serializable
   //We find the first smallest color
   val newColors = colors.map( elem => {
 
-   val colors = elem._2.sorted
-   var newColor = 1
-   var index = 0
+   val colors = elem._2
 
-   //Loop function with return acting as a break statement.
-   def loop(): Unit = {
-    while (true) {
-     //Check for empty array, or for end.
-     if (index == colors.length || colors.isEmpty) return
+   var counter = 1
+   var bestColor = 0
 
-     //If color is present in the array, we keep searching for an empty slot
-     if (newColor == colors(index)) {
-      newColor += 1
-      index += 1
-     }
-     else {
+   def looop() : Unit =  {
+    for (i <- colors) {
+
+     if (i != counter) {
+      bestColor = i
       return
      }
+     counter += 1
+     bestColor = i+1
     }
-   }
-   loop()
-   (elem._1, newColor)
+   } //function end
+
+   looop()
+
+   (elem._1, bestColor)
   })
 
 
@@ -224,13 +227,25 @@ class ColoringWithoutGraphX extends Serializable
 
   //First iteration is off loop.
   //We exchange tiebreakers
-  counter += 1
-  println("Iteration numero : " + counter)
   val msg1 = tieBreakerMessages(myVertices, e, context)
   if (msg1.isEmpty) return (myVertices,e) //condition de sortie ici
 
   //We make the first knights
   myVertices = makeKnightCandidates( true, myVertices, msg1.get, context)
+
+
+  if (debug) {
+    println("Printing first knights")
+   myVertices.collect().filter( e => {
+    if (e._2.knighthood == 2) true
+    else false
+   }
+   )sortBy(_._1)foreach(println)
+
+   println("Printing initial graph")
+   myVertices.collect() foreach println
+
+  }
 
   //Now we can go into the loop
   //Call the loop
@@ -240,15 +255,9 @@ class ColoringWithoutGraphX extends Serializable
   {
    while (true)
    {
-    //myVertices = myVertices.localCheckpoint()
-    // myVertices.collect().sortBy(_._1)foreach(println)
 
     counter += 1
     println("Iteration numero : " + counter)
-
-    //debug vertices at start of iterations
-   // println("debugging graph at the start of the iterations")
-  //  myVertices.collect().sortBy(_._1).foreach(println)
 
     val msg1 = tieBreakerMessages(myVertices, e, context)
     if (msg1.isEmpty) return
@@ -256,8 +265,23 @@ class ColoringWithoutGraphX extends Serializable
     //We select the knight candidates
     myVertices = makeKnightCandidates( false, myVertices, msg1.get, context)
 
+
+    if (debug) {
+      println("Printing Knight candidates")
+     myVertices.collect().filter( e => {
+      if (e._2.knighthood == 1) true
+      else false
+     }
+     )sortBy(_._1)foreach(println)
+    }
+
     //We select a color for them
     myVertices = selectKnightColor(myVertices, e, context, false)
+
+    if (debug) {
+     println("End of iteration, printing graph")
+     myVertices.collect() sortBy(_._1)foreach(println)
+    }
 
    } // while loop
 
@@ -271,8 +295,12 @@ class ColoringWithoutGraphX extends Serializable
   myVertices = selectKnightColor( myVertices, e, context, true)
 
   //Final graph print
- println("Final graph")
- myVertices.collect().sortBy(_._1).foreach(println)
+
+   if (debug) {
+     println("Final graph")
+     myVertices.collect().sortBy(_._1).foreach(println)
+   }
+
 
   //Return
   ( myVertices, e)
@@ -286,16 +314,7 @@ object testPetersenGraph2 extends App {
  val sc = new SparkContext(conf)
  sc.setLogLevel("ERROR")
  var myVertices = sc.makeRDD(Array(
-  //      (1L, new node(id = 1, tiebreakValue = 3)), //A
-  //      (2L, new node(id = 2, tiebreakValue = 5)), //B
-  //      (3L, new node(id = 3, tiebreakValue = 1)), //C
-  //      (4L, new node(id = 4, tiebreakValue = 7)), //D
-  //      (5L, new node(id = 5, tiebreakValue = 10)), //E
-  //      (6L, new node(id = 6, tiebreakValue = 2)), //F
-  //      (7L, new node(id = 7, tiebreakValue = 3)), //G
-  //      (8L, new node(id = 8, tiebreakValue = 4)), //H
-  //      (9L, new node(id = 9, tiebreakValue = 6)), //I
-  //      (10L, new node(id = 10, tiebreakValue = 8)))) //J
+
   (1L, new node_data(tiebreakvalue = 1)), //A
   (2L, new node_data(tiebreakvalue = 2)), //B
   (3L, new node_data(tiebreakvalue = 3)), //C
@@ -319,13 +338,25 @@ object testPetersenGraph2 extends App {
   edge_data(9L, 10L)
  ))
 
- val coloring = new ColoringWithoutGraphX()
+ val coloring = new BCastColoring()
  val res = coloring.execute( myVertices, myEdges, sc)
- //println("\nNombre de couleur trouvées: " + algoColoring.getChromaticNumber(res))
+ //println("\nNombre de couleur trouvées: " + getBiggestColor_2())
 }
 
 
 object testProblem extends App {
+
+
+  //Returns the biggest color
+  def getBiggestColor_2( v : Array[(Long, node_data)] ): Int = {
+
+    var maxColor = 0
+    for (i <- v) {
+      if (i._2.color > maxColor) maxColor = i._2.color
+    }
+    maxColor
+  }
+
 
  val conf = new SparkConf()
    .setAppName("test a problem")
@@ -395,7 +426,10 @@ object testProblem extends App {
  (12L, new node_data(tiebreakvalue = 10)))) //I
 
 
- val coloring = new ColoringWithoutGraphX()
+ val coloring = new BCastColoring()
  val res = coloring.execute( myVertices, myEdges, sc)
+  val nbrCouleurs =  getBiggestColor_2(res._1.collect())
+
+  println("L'algorithme Broadcast coloring a trouve  : " + nbrCouleurs + " couleurs")
 
 }

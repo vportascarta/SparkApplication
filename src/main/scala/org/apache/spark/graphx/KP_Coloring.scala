@@ -39,10 +39,10 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
 //    override def toString: String = s"id : $id tiebreakvalue : $tiebreakvalue color : $color knighthood : $knighthood"
 //  }
 
-
-  class AlgoColoring extends Algorithm {
+  class KP_Coloring extends Algorithm {
 
     var TEST_OR_NOT = "NO"
+    var debug = false
 
 
     def getChromaticNumber(g: Graph[node, String]): Int = {
@@ -157,8 +157,7 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
       var counter = 0
       val fields = new TripletFields(true, true, false) //join strategy
 
-      println("ITERATION NUMERO : " + (counter + 1))
-      counter += 1
+      println("We create the first knights ")
 
       //We have to create the first knights
       val msg1 = myGraph.aggregateMessages[Long](
@@ -190,9 +189,10 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
       })
 
 
-      println("Initial iteration")
-      myGraph.vertices.collect().sortBy(_._1).foreach(println)
-
+      if (debug) {
+        println("Initial graph with the first knights")
+        myGraph.vertices.collect().sortBy(_._1).foreach(println)
+      }
 
       def loop1: Unit = {
         while (true) {
@@ -213,8 +213,6 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
             fields //use an optimized join strategy (we don't need the edge attribute)
           )
 
-          println("Best tiebreakers for vertices")
-          messages.collect.sortBy( _._1) .foreach (println)
 
           //This is our main exit condition. We exit if there are no more messages
           if (messages.isEmpty()) return
@@ -224,11 +222,14 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
             (vid, sommet, bestTb) => markKnight(vid, sommet, bestTb))
 
 
-         println("Knight candidates")
-          myGraph.vertices.collect().sortBy(_._1).filter( e=> {
-            if (e._2.knighthood == 1) true
-            else false
-          })foreach(println)
+          if (debug) {
+            println("Knight candidates")
+            myGraph.vertices.collect().sortBy(_._1).filter( e=> {
+              if (e._2.knighthood == 1) true
+              else false
+            })foreach(println)
+
+          }
 
           //The marked knights get to choose their best possible color
           //They choose from the lowest colors from adjacent knights
@@ -239,20 +240,26 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
           )
 
 
-         println("Printing unavailable colors")
-          unavailableColors.collect().foreach(println)
+          if (debug) {
+            println("Printing unavailable colors")
+            unavailableColors.collect().foreach(println)
+          }
+
 
           //We give their colors to the new knights
             myGraph = myGraph.joinVertices(unavailableColors)(
               (vid, sommet, colors) => becomeKnight(vid, sommet, colors)
             )
 
-          println("Printing graph again")
-         myGraph.vertices.collect().sortBy(_._1).foreach(println)
+
+          if (debug) {
+            println("Printing graph again")
+            myGraph.vertices.collect().sortBy(_._1).foreach(println)
+          }
+
 
           myGraph.vertices.take(1)
          // myGraph.checkpoint()
-
 
         }
       }
@@ -268,8 +275,11 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
         (vid, sommet, colors) => becomeKnight(vid, sommet, colors))
 
 
-      println("Printing graph one last time")
-      myGraph.vertices.collect().sortBy(_._1).foreach(println)
+      if (debug) {
+        println("Printing graph one last time")
+        myGraph.vertices.collect().sortBy(_._1).foreach(println)
+      }
+
 
       myGraph //return the result graph
     }
@@ -280,7 +290,7 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
       .setAppName("Petersen Graph (10 nodes)")
       .setMaster("local[*]")
     val sc = new SparkContext(conf)
-    sc.setLogLevel("ERROR")
+    //sc.setLogLevel("ERROR")
     sc.setCheckpointDir("./")
     var myVertices = sc.makeRDD(Array(
       //      (1L, new node(id = 1, tiebreakvalue = 3)), //A
@@ -318,11 +328,10 @@ qui permet a l'algorithme glouton de coloriage de graphe de trancher dans ses d√
     ))
 
     var myGraph = Graph(myVertices, myEdges)
-    val algoColoring = new AlgoColoring()
+    val algoColoring = new KP_Coloring()
     val res = algoColoring.execute(myGraph, 2000, sc)
     println("\nNombre de couleur trouv√©es: " + algoColoring.getChromaticNumber(res))
   }
-
 
 
 object testProblem2 extends App {
@@ -400,7 +409,7 @@ object testProblem2 extends App {
 
 
   var myGraph = Graph(myVertices, myEdges)
-  val algoColoring = new AlgoColoring()
+  val algoColoring = new KP_Coloring()
   val res = algoColoring.execute(myGraph, 2000, sc)
   println("\nNombre de couleur trouv√©es: " + algoColoring.getChromaticNumber(res))
 

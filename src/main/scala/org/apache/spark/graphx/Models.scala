@@ -6,7 +6,7 @@ object Models {
 
   //Having this inside GraphColoring caused so many problems omg
   //ids are randomized
-  case class node(id: Long = 0, color: Int = 1, knighthood: Int = 0, tiebreakvalue: Long = 1L) {
+  case class node(id: Long = 0, color: Int = 0, knighthood: Int = 0, tiebreakvalue: Long = 1L) {
 
     //Utile pour imprimer le graphe après
     override def toString: String = s"id : $id color : $color knighthood : $knighthood tiebreaker : $tiebreakvalue"
