@@ -1,3 +1,5 @@
+package org.apache.spark.graphx
+
 /* This algorithm has been optimized to not use shuffles. We use broadcasted arrays instead */
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
@@ -99,8 +101,8 @@ class ColoringWithoutGraphX extends Serializable
   })
 
   //debug tiebreaker_messages
-  println("checking status of knight candidates")
-  myVertices.collect().sortBy(_._1)foreach(println)
+ // println("checking status of knight candidates")
+  //myVertices.collect().sortBy(_._1)foreach(println)
 
   //Return the new array of vertices
   myVertices
@@ -163,8 +165,8 @@ class ColoringWithoutGraphX extends Serializable
 
 
   //debug tiebreaker_messages
-  println("printing available colors")
-  colors.collect().sortBy(_._1).foreach(println)
+ // println("printing available colors")
+ // colors.collect().sortBy(_._1).foreach(println)
 
   //Now we select the new color for each vertex
   //We find the first smallest color
@@ -215,14 +217,10 @@ class ColoringWithoutGraphX extends Serializable
  }
 
 
- def execute(vertices : node, edges : edge,  context : SparkContext, randomTieBreakers : Boolean): graph =
+ def execute(vertices : node, edges : edge,  context : SparkContext) :  graph =
  {
   var counter = 0
   var myVertices: node = vertices.cache()
-
-  //Random the tiebreakers
-  if (randomTieBreakers == true) {
-  }
 
   //First iteration is off loop.
   //We exchange tiebreakers
@@ -249,8 +247,8 @@ class ColoringWithoutGraphX extends Serializable
     println("Iteration numero : " + counter)
 
     //debug vertices at start of iterations
-    println("debugging graph at the start of the iterations")
-    myVertices.collect().sortBy(_._1).foreach(println)
+   // println("debugging graph at the start of the iterations")
+  //  myVertices.collect().sortBy(_._1).foreach(println)
 
     val msg1 = tieBreakerMessages(myVertices, edges, context)
     if (msg1.isEmpty) return
@@ -273,15 +271,15 @@ class ColoringWithoutGraphX extends Serializable
   myVertices = selectKnightColor( myVertices, edges, context, true)
 
   //Final graph print
-  println("Final graph")
-  myVertices.collect().sortBy(_._1).foreach(println)
+ // println("Final graph")
+ // myVertices.collect().sortBy(_._1).foreach(println)
 
   //Return
   ( myVertices, edges)
  }
 }
 
-object testPetersenGraph extends App {
+object testPetersenGraph2 extends App {
  val conf = new SparkConf()
    .setAppName("Petersen Graph (10 nodes)")
    .setMaster("local[*]")
@@ -321,8 +319,7 @@ object testPetersenGraph extends App {
   edge_data(9L, 10L)
  ))
 
-
  val coloring = new ColoringWithoutGraphX()
- val res = coloring.execute( myVertices, myEdges, sc, false)
+ val res = coloring.execute( myVertices, myEdges, sc)
  //println("\nNombre de couleur trouvées: " + algoColoring.getChromaticNumber(res))
 }

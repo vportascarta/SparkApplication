@@ -1,9 +1,54 @@
 package org.apache.spark.graphx
 
 import ca.lif.sparklauncher.app.CustomLogger
+import org.apache.spark.graphx.Models.node
 import org.apache.spark.{SparkConf, SparkContext}
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+import scala.util.Random
 
 object ColoringProgram {
+
+
+  //Generate random tiebreakers for an array of vertices
+  def random_tiebreakers(v : Array[(Long, node_data)] ): Array[(Long, node_data)] =
+  {
+
+    val count = v.size
+    var vertices = v
+
+    //Preparer un graph random
+    //Randomizer les ids
+    var ids_random: ArrayBuffer[Int] = new ArrayBuffer()
+    //val seed = Random.nextInt(100)
+    // println("le seed est : "+seed)
+    // Random.setSeed(seed)
+    Random.shuffle(1 to count).copyToBuffer(ids_random)
+
+    var cc = 0
+    vertices = vertices.map(v => {
+      val n = node_data(tiebreakvalue = ids_random(cc))
+      cc += 1
+      (v._1, n)
+    })
+
+    println("Print le array avec random tiebreakers")
+    vertices.sortBy(_._1).foreach( println)
+
+
+    vertices
+  }
+
+  //Returns the biggest color
+  def getBiggestColor_2( v : Array[(Long, node_data)] ): Int = {
+
+    var maxColor = 0
+    for (i <- v) {
+      if (i._2.color > maxColor) maxColor = i._2.color
+    }
+    maxColor
+  }
+
 
   def exec_for_gc(coloring : Algorithm, graph: Graph[Models.node, String] , sc : SparkContext): Unit =
   {
@@ -11,6 +56,18 @@ object ColoringProgram {
     val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
     CustomLogger.logger.info(result)
   }
+
+
+  def exec_for_gc2( vertices: Array[(Long, node_data)], edges: Vector[edge_data], sc : SparkContext): Unit =
+  {
+    val algo = new ColoringWithoutGraphX()
+    //Generate tiebreakers
+    var myVertices = random_tiebreakers(vertices)
+    val res: (algo.node, algo.edge) = algo.execute( vertices = sc.makeRDD(myVertices), edges = sc.makeRDD(edges), sc)
+    val result = s"L'algorithme greedy a choisi ${getBiggestColor_2(res._1.collect())} couleurs."
+    CustomLogger.logger.info(result)
+  }
+
 
   def launch(filepath: String,
              is_graphviz: Boolean,
@@ -96,6 +153,26 @@ object ColoringProgram {
 
       } //fin gros if coloring
 
+
+      //Nouvel algo
+    else if (algo_version == 3)
+    {
+
+      val graph = Generator.generate_nodes_and_edges(t, n, v, sc, partitions)
+      CustomLogger.logger.info(s"Config : T = $t / N = $n / V = $v")
+
+      // Looping the algo
+      for (i <- 1 to loops) {
+        CustomLogger.logger.info(s"Test n $i/$loops")
+        //val res = coloring.execute(graph, 1000, sc)
+        //coloring.printGraphProper(  res)
+        // val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
+        //CustomLogger.logger.info(result)
+        exec_for_gc2( vertices = graph._1, edges = graph._2, sc = sc)
+        System.gc()
+      }
+
+    }
 
 
     sc.stop()
