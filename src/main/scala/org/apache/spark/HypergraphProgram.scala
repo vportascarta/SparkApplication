@@ -74,15 +74,18 @@ object HypergraphProgram {
 
     val hypergraphRDD = sc.parallelize(hypergraph.toSeq, partitions)
 
+
+    var myAlgo = 2
+
     // Looping the algo
     for (i <- 1 to loops) {
       CustomLogger.logger.info(s"Test n $i/$loops")
 
       def get_result: Option[ArrayBuffer[Long]] = {
-        if (algo == 1) {
+        if (myAlgo == 1) {
           Some(Algorithm.greedy_algorithm(sc, hypergraphRDD))
         }
-        else if (algo == 2) {
+        else if (myAlgo == 2) {
           Some(Algorithm2.greedy_algorithm(sc, hypergraphRDD))
         }
         else None

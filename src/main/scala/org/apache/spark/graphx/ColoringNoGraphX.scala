@@ -257,7 +257,9 @@ class BCastColoring extends Serializable
    {
 
     counter += 1
-    println("Iteration numero : " + counter)
+
+   // if (counter % 10 == 0)
+    //println("Iteration numero : " + counter)
 
     val msg1 = tieBreakerMessages(myVertices, e, context)
     if (msg1.isEmpty) return

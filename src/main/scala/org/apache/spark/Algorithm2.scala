@@ -49,7 +49,7 @@ object Algorithm2 {
 
         currentRDD =  currentRDD.localCheckpoint()
 
-        CustomLogger.logger.info(s"ITERATION NUMBER : $counter")
+        //CustomLogger.logger.info(s"ITERATION NUMBER : $counter")
         counter += 1
 
         //Condition de fin, le RDD est vide
@@ -114,6 +114,9 @@ object Algorithm2 {
     }
 
     loop()
+
+    CustomLogger.logger.info(s"ITERATION NUMBER : $counter")
+
     logEdgesChosen
   }
 }

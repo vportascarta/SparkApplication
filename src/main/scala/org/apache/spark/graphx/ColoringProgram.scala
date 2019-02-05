@@ -164,11 +164,27 @@ object ColoringProgram {
       // Looping the algo
       for (i <- 1 to loops) {
         CustomLogger.logger.info(s"Test n $i/$loops")
+        CustomLogger.logger.info(s"Algorithm : Knights and Peasants with Hash-broadcast joins")
+
+        val numVertices = graph._1.size
+        val numEdges = graph._2.size
+
+        CustomLogger.logger.info(s"Size of problem : $numVertices vertices and $numEdges edges")
+
         //val res = coloring.execute(graph, 1000, sc)
         //coloring.printGraphProper(  res)
         // val result = s"L'algorithme greedy a choisi ${coloring.getBiggestColor(res)} couleurs."
         //CustomLogger.logger.info(result)
+
+        val t1 = System.nanoTime()
+
         exec_for_gc2( vertices = graph._1, edges = graph._2, sc = sc)
+
+        val t2 = System.nanoTime()
+        val time_elapsed =  (t2 - t1).toDouble  / 1000000000
+
+        CustomLogger.logger.info(s"Time elapsed : $time_elapsed seconds")
+
         System.gc()
       }
 
