@@ -107,7 +107,7 @@ object Parser {
     CustomLogger.logger.info("END OF PARSING")
     val sizehyper = hypergraph.size
 
-    CustomLogger.logger.info(s"Size of hypergraph : $sizehyper")
+    CustomLogger.logger.info(s"Number of hyperedges : $sizehyper")
 
     hypergraph
   }

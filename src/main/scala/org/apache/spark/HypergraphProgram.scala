@@ -93,8 +93,8 @@ object HypergraphProgram {
 
       val hyperedge_choisies = get_result.getOrElse(ArrayBuffer[Long]())
 
-      var result = s"L'algorithme greedy a choisi ${hyperedge_choisies.size} hyperedges. Les voici : "
-      hyperedge_choisies.foreach(he => result += he + " ")
+      var result = s"L'algorithme greedy a choisi ${hyperedge_choisies.size} hyperedges "
+      //hyperedge_choisies.foreach(he => result += he + " ")
 
       CustomLogger.logger.info(result)
     }

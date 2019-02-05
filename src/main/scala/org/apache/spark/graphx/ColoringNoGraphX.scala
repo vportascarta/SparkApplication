@@ -5,6 +5,8 @@ import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
+
+import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SortedSet
 
@@ -167,11 +169,15 @@ class BCastColoring extends Serializable
   val addToList = (s: SortedSet[Int], v: Int) => s += v
   val mergeLists = (p1: SortedSet[Int], p2: SortedSet[Int]) => p1 | p2
 
-  val colors = colormsgs.aggregateByKey(colorList)(addToList,mergeLists)
+  val colors: RDD[(Long, mutable.SortedSet[Int])] = colormsgs.aggregateByKey(colorList)(addToList,mergeLists)
 
+
+  if (debug) {
+    println("printing available colors")
+    colors.collect().sortBy(_._1).foreach(println)
+  }
   //debug tiebreaker_messages
- // println("printing available colors")
- // colors.collect().sortBy(_._1).foreach(println)
+
 
   //Now we select the new color for each vertex
   //We find the first smallest color
@@ -186,7 +192,7 @@ class BCastColoring extends Serializable
     for (i <- colors) {
 
      if (i != counter) {
-      bestColor = i
+      bestColor = counter
       return
      }
      counter += 1
@@ -302,10 +308,30 @@ class BCastColoring extends Serializable
 
   //Final graph print
 
-   if (debug) {
-     println("Final graph")
-     myVertices.collect().sortBy(_._1).foreach(println)
-   }
+     if (debug) {
+      println("Final graph")
+      myVertices.collect().sortBy(_._1).foreach(println)
+     }
+
+
+  //Check if graph is valid
+  println("Checking if graph coloring is valid....")
+  val checkV = context.broadcast(  myVertices.collectAsMap())
+  //If this RDD is empty, all is good.
+  val check: Boolean = e.flatMap(edge => {
+
+      //Color SRC
+       val colorSrc = checkV.value(edge.src).color
+       val colorDst = checkV.value(edge.dst).color
+
+       if (colorSrc == colorDst)
+           Some(1)
+       else None
+  }).isEmpty()
+
+  if (check == true)
+     println("Graph coloring is verified")
+  else println("Graph coloring has a problem")
 
 
   //Return
