@@ -5,6 +5,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
 import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
+import org.apache.spark.storage.StorageLevel
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -72,7 +73,7 @@ class BCastColoring extends Serializable
    else b
   })
 
-  return Some(tiebreaker_messages)
+  return Some(tiebreaker_messages.persist(StorageLevel.MEMORY_ONLY_SER))
  }
 
  def makeKnightCandidates(firstIteration : Boolean, vertices : node, tiebreaker_messages : RDD[(Long,Long)], context : SparkContext): node =
@@ -229,12 +230,13 @@ class BCastColoring extends Serializable
  def execute(vertices : node, e : edge,  context : SparkContext) :  graph =
  {
   var counter = 0
-  var myVertices: node = vertices.cache()
+  var myVertices: node = vertices.persist(StorageLevel.MEMORY_ONLY_SER)
+  var myEdges = e.cache()
 
   //First iteration is off loop.
   //We exchange tiebreakers
-  val msg1 = tieBreakerMessages(myVertices, e, context)
-  if (msg1.isEmpty) return (myVertices,e) //condition de sortie ici
+  val msg1 = tieBreakerMessages(myVertices, myEdges, context)
+  if (msg1.isEmpty) return (myVertices,myEdges) //condition de sortie ici
 
   //We make the first knights
   myVertices = makeKnightCandidates( true, myVertices, msg1.get, context)
@@ -265,9 +267,9 @@ class BCastColoring extends Serializable
     counter += 1
 
    // if (counter % 10 == 0)
-    //println("Iteration numero : " + counter)
+    println("Iteration numero : " + counter)
 
-    val msg1 = tieBreakerMessages(myVertices, e, context)
+    val msg1 = tieBreakerMessages(myVertices, myEdges, context)
     if (msg1.isEmpty) return
 
     //We select the knight candidates
@@ -284,7 +286,7 @@ class BCastColoring extends Serializable
     }
 
     //We select a color for them
-    myVertices = selectKnightColor(myVertices, e, context, false)
+    myVertices = selectKnightColor(myVertices, myEdges, context, false)
 
     if (debug) {
      println("End of iteration, printing graph")
@@ -297,14 +299,14 @@ class BCastColoring extends Serializable
 
    } // while loop
 
-   (myVertices, e)//while loop ends here
+   (myVertices, myEdges)//while loop ends here
   } //dummy function ends here
 
   //Color the last vertices before end
   //These vertices are isolated and can take their best available color
 
   //Choose a color here
-  myVertices = selectKnightColor( myVertices, e, context, true)
+  myVertices = selectKnightColor( myVertices, myEdges, context, true)
 
   //Final graph print
 
@@ -318,7 +320,7 @@ class BCastColoring extends Serializable
   println("Checking if graph coloring is valid....")
   val checkV = context.broadcast(  myVertices.collectAsMap())
   //If this RDD is empty, all is good.
-  val check: Boolean = e.flatMap(edge => {
+  val check: Boolean = myEdges.flatMap(edge => {
 
       //Color SRC
        val colorSrc = checkV.value(edge.src).color
@@ -335,7 +337,7 @@ class BCastColoring extends Serializable
 
 
   //Return
-  ( myVertices, e)
+  ( myVertices, myEdges)
  }
 }
 
