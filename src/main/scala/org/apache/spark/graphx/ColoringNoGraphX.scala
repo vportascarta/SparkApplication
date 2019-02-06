@@ -267,7 +267,7 @@ class BCastColoring extends Serializable
     counter += 1
 
    // if (counter % 10 == 0)
-    println("Iteration numero : " + counter)
+    //println("Iteration numero : " + counter)
 
     val msg1 = tieBreakerMessages(myVertices, myEdges, context)
     if (msg1.isEmpty) return
@@ -317,23 +317,23 @@ class BCastColoring extends Serializable
 
 
   //Check if graph is valid
-  println("Checking if graph coloring is valid....")
-  val checkV = context.broadcast(  myVertices.collectAsMap())
-  //If this RDD is empty, all is good.
-  val check: Boolean = myEdges.flatMap(edge => {
-
-      //Color SRC
-       val colorSrc = checkV.value(edge.src).color
-       val colorDst = checkV.value(edge.dst).color
-
-       if (colorSrc == colorDst)
-           Some(1)
-       else None
-  }).isEmpty()
-
-  if (check == true)
-     println("Graph coloring is verified")
-  else println("Graph coloring has a problem")
+//  println("Checking if graph coloring is valid....")
+//  val checkV = context.broadcast(  myVertices.collectAsMap())
+//  //If this RDD is empty, all is good.
+//  val check: Boolean = myEdges.flatMap(edge => {
+//
+//      //Color SRC
+//       val colorSrc = checkV.value(edge.src).color
+//       val colorDst = checkV.value(edge.dst).color
+//
+//       if (colorSrc == colorDst)
+//           Some(1)
+//       else None
+//  }).isEmpty()
+//
+//  if (check == true)
+//     println("Graph coloring is verified")
+//  else println("Graph coloring has a problem")
 
 
   //Return
@@ -341,41 +341,6 @@ class BCastColoring extends Serializable
  }
 }
 
-object testPetersenGraph2 extends App {
- val conf = new SparkConf()
-   .setAppName("Petersen Graph (10 nodes)")
-   .setMaster("local[*]")
- val sc = new SparkContext(conf)
- sc.setLogLevel("ERROR")
- var myVertices = sc.makeRDD(Array(
-
-  (1L, new node_data(tiebreakvalue = 1)), //A
-  (2L, new node_data(tiebreakvalue = 2)), //B
-  (3L, new node_data(tiebreakvalue = 3)), //C
-  (4L, new node_data(tiebreakvalue = 4)), //D
-  (5L, new node_data(tiebreakvalue = 5)), //E
-  (6L, new node_data(tiebreakvalue = 6)), //F
-  (7L, new node_data(tiebreakvalue = 7)), //G
-  (8L, new node_data(tiebreakvalue = 8)), //H
-  (9L, new node_data(tiebreakvalue = 9)), //I
-  (10L, new node_data(tiebreakvalue = 10)))) //J
-
- var myEdges: RDD[edge_data] = sc.makeRDD(Array(
-  edge_data(1L, 2L), edge_data(1L, 3L), edge_data(1L, 6L),
-  edge_data(2L, 7L), edge_data(2L, 8L),
-  edge_data(3L, 4L), edge_data(3L, 9L),
-  edge_data(4L, 5L), edge_data(4L, 8L),
-  edge_data(5L, 6L), edge_data(5L, 7L),
-  edge_data(6L, 10L),
-  edge_data(7L, 9L),
-  edge_data(8L, 10L),
-  edge_data(9L, 10L)
- ))
-
- val coloring = new BCastColoring()
- val res = coloring.execute( myVertices, myEdges, sc)
- //println("\nNombre de couleur trouvées: " + getBiggestColor_2())
-}
 
 
 object testProblem extends App {
@@ -466,4 +431,39 @@ object testProblem extends App {
 
   println("L'algorithme Broadcast coloring a trouve  : " + nbrCouleurs + " couleurs")
 
+}
+object testPetersenGraph2 extends App {
+ val conf = new SparkConf()
+   .setAppName("Petersen Graph (10 nodes)")
+   .setMaster("local[*]")
+ val sc = new SparkContext(conf)
+ sc.setLogLevel("ERROR")
+ var myVertices = sc.makeRDD(Array(
+
+  (1L, new node_data(tiebreakvalue = 1)), //A
+  (2L, new node_data(tiebreakvalue = 2)), //B
+  (3L, new node_data(tiebreakvalue = 3)), //C
+  (4L, new node_data(tiebreakvalue = 4)), //D
+  (5L, new node_data(tiebreakvalue = 5)), //E
+  (6L, new node_data(tiebreakvalue = 6)), //F
+  (7L, new node_data(tiebreakvalue = 7)), //G
+  (8L, new node_data(tiebreakvalue = 8)), //H
+  (9L, new node_data(tiebreakvalue = 9)), //I
+  (10L, new node_data(tiebreakvalue = 10)))) //J
+
+ var myEdges: RDD[edge_data] = sc.makeRDD(Array(
+  edge_data(1L, 2L), edge_data(1L, 3L), edge_data(1L, 6L),
+  edge_data(2L, 7L), edge_data(2L, 8L),
+  edge_data(3L, 4L), edge_data(3L, 9L),
+  edge_data(4L, 5L), edge_data(4L, 8L),
+  edge_data(5L, 6L), edge_data(5L, 7L),
+  edge_data(6L, 10L),
+  edge_data(7L, 9L),
+  edge_data(8L, 10L),
+  edge_data(9L, 10L)
+ ))
+
+ val coloring = new BCastColoring()
+ val res = coloring.execute( myVertices, myEdges, sc)
+ //println("\nNombre de couleur trouvées: " + g())
 }

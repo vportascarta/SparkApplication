@@ -1,8 +1,11 @@
 package org.apache.spark.graphx
 
 import ca.lif.sparklauncher.app.CustomLogger
+import org.apache.spark.graphx.ColoringProgram.exec_for_gc2
 import org.apache.spark.graphx.Models.node
+import org.apache.spark.graphx.runLotsOfTests.numberOfloops
 import org.apache.spark.{SparkConf, SparkContext}
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Random
@@ -58,14 +61,18 @@ object ColoringProgram {
   }
 
 
-  def exec_for_gc2( vertices: Array[(Long, node_data)], edges: Vector[edge_data], sc : SparkContext): Unit =
+  def exec_for_gc2( vertices: Array[(Long, node_data)], edges: Vector[edge_data], sc : SparkContext): Int =
   {
     val algo = new BCastColoring()
     //Generate tiebreakers
     var myVertices = random_tiebreakers(vertices)
     val res: (algo.node, algo.edge) = algo.execute( vertices = sc.makeRDD(myVertices), e = sc.makeRDD(edges), sc)
-    val result = s"L'algorithme greedy a choisi ${getBiggestColor_2(res._1.collect())} couleurs."
-    CustomLogger.logger.info(result)
+    val numColors = getBiggestColor_2(res._1.collect())
+    //val result = s"L'algorithme greedy a choisi ${numColors} couleurs."
+    //println(result)
+    //CustomLogger.logger.info(result)
+
+    numColors
   }
 
 
@@ -194,3 +201,86 @@ object ColoringProgram {
     sc.stop()
   }
 }
+
+
+object runLotsOfTests extends App
+{
+
+  val conf = new SparkConf()
+    .setAppName("Test everything and write results")
+    .setMaster("local[*]")
+  val sc = new SparkContext(conf)
+  sc.setLogLevel("ERROR")
+
+  /* Syntax is :
+
+  2;3;2;COLORING_SPARK;2.559;4;
+  t n v
+   */
+
+  // PrintWriter
+  //ouvrir en mode append
+  import java.io._
+  val pw = new PrintWriter(new File("results_coloring.txt"))
+ // pw.write("Hello, world")
+
+  val numberOfloops = 1
+
+  //T
+  for (t <- 2 to 5)
+    {
+      //vary n
+        for (n <- 2 to 10 )
+        {
+          //vary v
+          for (v <- 2 to 4 )
+          {
+              gen(t,n,v)
+          }
+        }
+    }
+
+  def gen(t : Int, n : Int, v : Int) =
+  {
+
+    val graph = Generator.generate_nodes_and_edges(t, n, v, sc, 12)
+
+    val numVertices = graph._1.size
+    val numEdges = graph._2.size
+
+
+    for (i <- 0 until numberOfloops)
+      {
+        println(s"Config : T = $t / N = $n / V = $v")
+        println(s"Algorithm : Knights and Peasants with Hash-broadcast joins")
+        println(s"Test n $i/$numberOfloops")
+        println(s"Size of problem : $numVertices vertices and $numEdges edges")
+
+        val t1 = System.nanoTime()
+
+        val numcolors = exec_for_gc2( vertices = graph._1, edges = graph._2, sc = sc)
+        println(s"L'algorithme greedy a choisi ${numcolors} couleurs")
+
+        val t2 = System.nanoTime()
+        val time_elapsed =  (t2 - t1).toDouble  / 1000000000
+
+        println(s"Time elapsed : $time_elapsed seconds")
+
+        //Write the results to our file
+        pw.write(s"$t;$n;$v;COLORING_BROADCAST;$time_elapsed;$numcolors\n")
+        pw.flush()
+
+        System.gc()
+
+      }
+
+  }
+
+  //Close file
+  pw.close
+
+
+
+}
+
+
