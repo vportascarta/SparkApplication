@@ -114,9 +114,7 @@ object Algorithm2 {
     }
 
     loop()
-
     CustomLogger.logger.info(s"ITERATION NUMBER : $counter")
-
     logEdgesChosen
   }
 }

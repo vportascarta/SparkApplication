@@ -103,3 +103,83 @@ object HypergraphProgram {
   }
 
 }
+
+
+object runHyperGraphTests extends App
+{
+
+  val conf = new SparkConf()
+    .setAppName("every hypergraph test is here")
+    .setMaster("local[*]")
+  val sc = new SparkContext(conf)
+  sc.setLogLevel("ERROR")
+
+  /* Syntax is :
+
+  2;3;2;COLORING_SPARK;2.559;4;
+  t n v
+   */
+
+  // PrintWriter
+  //ouvrir en mode append
+  import java.io._
+  val pw = new PrintWriter(new FileOutputStream("results_coloring_hypergraph.txt", true))
+
+  val numberOfloops = 10
+
+  //T
+  for (t <- 2 to 5)
+  {
+    //vary n
+    for (n <- 2 to 10 )
+    {
+      //vary v
+      for (v <- 2 to 4 )
+      {
+        gen(t,n,v)
+      }
+    }
+  }
+
+  def gen(t : Int, n : Int, v : Int) =
+  {
+
+    val hypergraph: Hypergraph = Generator2.generateHypergraph(t, n, v)
+    val hypergraphRDD = sc.parallelize(hypergraph.toSeq)
+
+    val numhyperedges = hypergraph.size
+    val elementsPerHyperedge = hypergraph.take(1).size
+
+    for (i <- 0 until numberOfloops)
+    {
+      println(s"Config : T = $t / N = $n / V = $v")
+      println(s"Algorithm : Set Cover greedy algorithm (random tiebreaker)")
+      println(s"Test n $i/$numberOfloops")
+      println(s"Size of problem : $numhyperedges hyperedges and $elementsPerHyperedge elements per hyperedge on average.")
+
+      val t1 = System.nanoTime()
+      val chosen_hyperedges = Algorithm2.greedy_algorithm(sc, hypergraphRDD)
+      val numcolors = chosen_hyperedges.size
+      println(s"L'algorithme greedy a choisi ${numcolors} couleurs")
+
+      val t2 = System.nanoTime()
+      val time_elapsed =  (t2 - t1).toDouble  / 1000000000
+
+      println(s"Time elapsed : $time_elapsed seconds")
+
+      //Write the results to our file
+      pw.append(s"$t;$n;$v;HYPERGRAPH_SETCOVER;$time_elapsed;$numcolors\n")
+      pw.flush()
+
+      System.gc()
+
+    }
+
+  }
+
+  //Close file
+  pw.close
+
+
+
+}
