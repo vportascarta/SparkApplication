@@ -1,5 +1,4 @@
 package org.apache.spark
-
 import ca.lif.sparklauncher.app.CustomLogger
 import com.google.common.hash.Hashing
 import org.apache.spark.Models.{Hyperedge, Hypergraph, TPair, Variable}
@@ -10,13 +9,10 @@ import scala.collection.mutable.{ArrayBuffer, ListBuffer, Map, Set}
 object Generator {
 
   val hashing = Hashing.sha1()
-
   //A problem is an array of variables, and their values
   val problem = ArrayBuffer[Variable]()
-
   //This is used to print, sort, and renumber things
   val allpairs = Map[Long, String]()
-
   // This is the result
   val hypergraph = Set[Hyperedge]()
   var edge_index = 1
@@ -189,6 +185,15 @@ object Generator {
 
     hypergraph
   }
+
+
+}
+
+
+object testGenerator extends App
+{
+    val res = Generator.generateHypergraph(3,2,2,false)
+   res.foreach( println)
 
 
 }

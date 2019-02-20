@@ -221,10 +221,10 @@ object runLotsOfTests extends App
   // PrintWriter
   //ouvrir en mode append
   import java.io._
-  val pw = new PrintWriter(new File("results_coloring.txt"))
+  val pw = new PrintWriter(new FileOutputStream("results_coloring.txt", true))
  // pw.write("Hello, world")
 
-  val numberOfloops = 1
+  val numberOfloops = 10
 
   //T
   for (t <- 2 to 5)
@@ -240,8 +240,11 @@ object runLotsOfTests extends App
         }
     }
 
-  def gen(t : Int, n : Int, v : Int) =
+  def gen(t : Int, n : Int, v : Int): Unit =
   {
+
+    //Check for invalid graphs
+    if (t >= n || t >= v) return 0
 
     val graph = Generator.generate_nodes_and_edges(t, n, v, sc, 12)
 

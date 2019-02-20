@@ -48,7 +48,8 @@ object HypergraphProgram {
       if (myalgo == 1) {
         Some(Generator.generateHypergraph(t, n, v))
       }
-      else if (myalgo == 2) {
+      else
+      if (myalgo == 2) {
         Some(Generator2.generateHypergraph(t, n, v))
       }
       else None

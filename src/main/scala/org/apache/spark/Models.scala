@@ -6,7 +6,15 @@ object Models {
 
   type Hypergraph = Set[Hyperedge]
 
-  case class Hyperedge(listVertices: Set[Long], edgeID: Long)
+  case class Hyperedge(listVertices: Set[Long], edgeID: Long) {
+    override def toString: String = {
+      var buffer = ""
+      for (i <- listVertices) {
+        buffer += i
+      }
+      buffer
+    }
+  }
 
   //A tpair is a group of values. Can be a pair if t=2 or more if t is 3,4,5 etc
   //The initial list has only one character in it
