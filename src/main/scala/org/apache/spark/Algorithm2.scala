@@ -5,6 +5,19 @@ import org.apache.spark.rdd.RDD
 import scala.collection.mutable.ArrayBuffer
 
 
+object utilss extends Serializable {
+
+  import me.lemire.integercompression.differential.IntegratedIntCompressor
+  val iic = new IntegratedIntCompressor
+
+  def lemire_uncompress(arr : Array[Int]) : Array[Int] = {
+    iic.uncompress(arr) // equals to data
+}
+
+}
+
+
+
 object Algorithm2 {
 
   //Returns an array that contains the chosen sets
@@ -33,8 +46,15 @@ object Algorithm2 {
 
   */
 
+  /*
 
-  def greedy_algorithm(sc: SparkContext, rdd: RDD[ArrayBuffer[Int]]): ArrayBuffer[Long] = {
+  New:
+  Input is a RDD of compressed ints
+  We decompress before using every array of this RDD!
+   */
+
+
+  def greedy_algorithm(sc: SparkContext, rdd: RDD[Array[Int]]): ArrayBuffer[Long] = {
     //sc.setCheckpointDir(".") //not used when using local checkpoint
     val randomGen = scala.util.Random
     var currentRDD = rdd
@@ -71,7 +91,10 @@ object Algorithm2 {
         //Trouver le sommet S qui est présent dans le plus de tTests (Transformation)
         val rdd_sommetsCount = currentRDD.flatMap( e => {
             val ret = new ArrayBuffer[(Long,Int)]()
-            for (i <- e) {
+
+          //We decompress our integers before using them
+          val recov = utilss.lemire_uncompress(e)
+          for (i <- recov) {
               ret += Tuple2(i, 1)
             }
             ret
@@ -112,7 +135,10 @@ object Algorithm2 {
         //best_1 will be shipped to each task but it is rather small.
         //No need to use a BC variable here
         currentRDD = currentRDD.flatMap(edge => {
-          if (edge.contains(best._1))
+          //Decompress the set of tests
+          val recov = utilss.lemire_uncompress(edge) // equals to data
+
+          if (recov.contains(best._1))
             None
           else Some(edge)
         })
@@ -124,7 +150,7 @@ object Algorithm2 {
     }
 
     loop()
-    CustomLogger.logger.info(s"ITERATION NUMBER : $counter")
+   // CustomLogger.logger.info(s"ITERATION NUMBER : $counter")
     logEdgesChosen
   }
 }

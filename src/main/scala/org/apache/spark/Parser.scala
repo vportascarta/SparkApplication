@@ -66,11 +66,15 @@ object Parser {
 
 
   //We take a string that contains the hypergraph and we generate
-  def parseString(str: String): ArrayBuffer[ArrayBuffer[Int]] = {
-    var edgeCounter: Long = 0L
-    var hypergraph = ArrayBuffer[ArrayBuffer[Int]]()
+  def parseString(str: String): ArrayBuffer[Array[Int]] = {
 
-    def treatLine(line: String): Option[ArrayBuffer[Int]] = {
+    import me.lemire.integercompression.differential.IntegratedIntCompressor
+    val iic = new IntegratedIntCompressor
+
+    var edgeCounter: Long = 0L
+    var hypergraph = ArrayBuffer[Array[Int]]()
+
+    def treatLine(line: String): Option[Array[Int]] = {
       //check pour les commentaires
       if (line(0) == '#') {
         return None
@@ -84,7 +88,7 @@ object Parser {
       }
 
       edgeCounter += 1
-      Some(verticesOnHyperedge)
+      Some(verticesOnHyperedge.toArray)
     }
 
     var lastPrint = System.currentTimeMillis()
@@ -97,7 +101,11 @@ object Parser {
       if (!isFirst) {
         val result = treatLine(line)
         if (result.nonEmpty) {
-          hypergraph += result.get
+
+          //Compress this
+          val compressed: Array[Int] = iic.compress(result.get)
+          //val recov: Array[Int] = iic.uncompress(compressed)
+          hypergraph += compressed
         }
       }
       isFirst = false

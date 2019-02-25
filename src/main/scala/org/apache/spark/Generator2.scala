@@ -11,7 +11,7 @@ import org.apache.spark.Models.Hypergraph
 import scala.collection.mutable.ArrayBuffer
 
 object Generator2 {
-  def generateHypergraph(t: Int, n: Int, v: Int, output_to_file: Boolean = false): ArrayBuffer[ArrayBuffer[Int]] = {
+  def generateHypergraph(t: Int, n: Int, v: Int, output_to_file: Boolean = false): ArrayBuffer[Array[Int]] = {
 
    // CustomLogger.logger.info("BEGIN GENERATION")
     println("BEGIN GENERATION")

@@ -43,7 +43,7 @@ object HypergraphProgram {
     //Force system to use algo 2 all the time
     var myalgo = 2
 
-    def get_hypergraph: Option[ArrayBuffer[ArrayBuffer[Int]]] = {
+    def get_hypergraph: Option[ArrayBuffer[Array[Int]]] = {
 
 
     //  if (myalgo == 1) {
@@ -63,7 +63,7 @@ object HypergraphProgram {
   }
 
   def launch(algo: Int,
-             hypergraph: ArrayBuffer[ArrayBuffer[Int]],
+             hypergraph: ArrayBuffer[Array[Int]],
              partitions: Int,
              loops: Int): Unit = {
     // Spark Config
@@ -74,7 +74,7 @@ object HypergraphProgram {
     sc.setCheckpointDir("./")
     sc.setLogLevel("ERROR")
 
-    val hypergraphRDD = sc.parallelize(hypergraph.toSeq, partitions)
+    val hypergraphRDD = sc.parallelize(hypergraph, partitions)
 
 
     var myAlgo = 2
@@ -134,9 +134,9 @@ object runHyperGraphTests extends App
   var initialN = 2
   var initialV = 2
 
-   initialT = 2
-  initialN = 10
-   initialV = 4
+//   initialT = 2
+//  initialN = 10
+//   initialV = 4
 
   //Initial should be 2 everywhere
 
