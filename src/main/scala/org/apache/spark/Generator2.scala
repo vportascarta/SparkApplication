@@ -8,9 +8,14 @@ import ca.lif.sparklauncher.app.CustomLogger
 import ca.uqac.lif.testing.tway.{FrontEnd, VertexListGenerator}
 import org.apache.spark.Models.Hypergraph
 
+import scala.collection.mutable.ArrayBuffer
+
 object Generator2 {
-  def generateHypergraph(t: Int, n: Int, v: Int, output_to_file: Boolean = false): Hypergraph = {
-    CustomLogger.logger.info("BEGIN GENERATION")
+  def generateHypergraph(t: Int, n: Int, v: Int, output_to_file: Boolean = false): ArrayBuffer[ArrayBuffer[Int]] = {
+
+   // CustomLogger.logger.info("BEGIN GENERATION")
+    println("BEGIN GENERATION")
+
 
     val domains = FrontEnd.createDomains(n, v)
     val var_names: List[String] = new ArrayList[String](domains.size)
@@ -27,7 +32,9 @@ object Generator2 {
 
     val content = new String(baos.toByteArray, StandardCharsets.UTF_8)
 
-    CustomLogger.logger.info("GENERATION COMPLETE")
+   // CustomLogger.logger.info("GENERATION COMPLETE")
+    println("END GENERATION")
+
     Parser.parseString(content)
   }
 }

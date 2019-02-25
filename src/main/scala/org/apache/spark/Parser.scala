@@ -3,8 +3,11 @@ package org.apache.spark
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.Models.{Hyperedge, Hypergraph}
 
-import scala.collection.mutable.Set
+import scala.collection.mutable.{ArrayBuffer, Set}
 import scala.io.Source
+
+
+import me.lemire.integercompression._
 
 object Parser {
   //Read a hypergraph file
@@ -61,26 +64,27 @@ object Parser {
     hypergraph
   }
 
-  def parseString(str: String): Hypergraph = {
-    var edgeCounter: Long = 0L
-    var hypergraph = Set[Hyperedge]()
 
-    def treatLine(line: String): Option[Hyperedge] = {
+  //We take a string that contains the hypergraph and we generate
+  def parseString(str: String): ArrayBuffer[ArrayBuffer[Int]] = {
+    var edgeCounter: Long = 0L
+    var hypergraph = ArrayBuffer[ArrayBuffer[Int]]()
+
+    def treatLine(line: String): Option[ArrayBuffer[Int]] = {
       //check pour les commentaires
       if (line(0) == '#') {
         return None
       }
 
       val tokens = line.split(" ")
-      val verticesOnHyperedge = Set[Long]()
+      val verticesOnHyperedge = ArrayBuffer[Int]()
       //Add the token to the mutable set
       for (i <- tokens) {
-        verticesOnHyperedge += i.toLong
+        verticesOnHyperedge += i.toInt
       }
 
       edgeCounter += 1
-      val hyperedge_val = Hyperedge(verticesOnHyperedge, edgeCounter)
-      Some(hyperedge_val)
+      Some(verticesOnHyperedge)
     }
 
     var lastPrint = System.currentTimeMillis()

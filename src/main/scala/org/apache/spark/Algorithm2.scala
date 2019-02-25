@@ -2,8 +2,8 @@ package org.apache.spark
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.Models.Hyperedge
 import org.apache.spark.rdd.RDD
-
 import scala.collection.mutable.ArrayBuffer
+
 
 object Algorithm2 {
 
@@ -34,13 +34,15 @@ object Algorithm2 {
   */
 
 
-  def greedy_algorithm(sc: SparkContext, rdd: RDD[Hyperedge]): ArrayBuffer[Long] = {
+  def greedy_algorithm(sc: SparkContext, rdd: RDD[ArrayBuffer[Int]]): ArrayBuffer[Long] = {
     //sc.setCheckpointDir(".") //not used when using local checkpoint
     val randomGen = scala.util.Random
     var currentRDD = rdd
     //.cache()
     val logEdgesChosen = ArrayBuffer[Long]()
     var counter = 1
+
+
 
     //currentRDD.localCheckpoint()
 
@@ -56,15 +58,23 @@ object Algorithm2 {
         if (currentRDD.isEmpty()) return
 
         //Trouver le sommet S qui est présent dans le plus de tTests (Transformation)
-        val rdd_sommetsCount = currentRDD.mapPartitions(it => {
-          it.flatMap(u => {
-            var ret = new ArrayBuffer[(Long, Int)]()
-            for (i <- u.listVertices) {
+//        val rdd_sommetsCount = currentRDD.mapPartitions(it => {
+//          it.flatMap(u => {
+//            var ret = new ArrayBuffer[(Long, Int)]()
+//            for (i <- u.listVertices) {
+//              ret += Tuple2(i, 1)
+//            }
+//            ret
+//          })
+//        })
+
+        //Trouver le sommet S qui est présent dans le plus de tTests (Transformation)
+        val rdd_sommetsCount = currentRDD.flatMap( e => {
+            val ret = new ArrayBuffer[(Long,Int)]()
+            for (i <- e) {
               ret += Tuple2(i, 1)
             }
             ret
-
-          })
         })
 
         //Calculate the counts for each vertex (Transformation)
@@ -102,7 +112,7 @@ object Algorithm2 {
         //best_1 will be shipped to each task but it is rather small.
         //No need to use a BC variable here
         currentRDD = currentRDD.flatMap(edge => {
-          if (edge.listVertices.contains(best._1))
+          if (edge.contains(best._1))
             None
           else Some(edge)
         })
