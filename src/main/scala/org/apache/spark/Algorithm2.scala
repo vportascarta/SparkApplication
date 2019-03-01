@@ -2,6 +2,9 @@ package org.apache.spark
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.Models.Hyperedge
 import org.apache.spark.rdd.RDD
+import org.apache.spark.runHyperGraphTests.spark
+import org.apache.spark.sql.Dataset
+
 import scala.collection.mutable.ArrayBuffer
 
 
@@ -54,15 +57,17 @@ object Algorithm2 {
    */
 
 
-  def greedy_algorithm(sc: SparkContext, rdd: RDD[Array[Int]]): ArrayBuffer[Long] = {
+  def greedy_algorithm(sc: SparkContext, rdd: Dataset[Array[Int]]): ArrayBuffer[Long] = {
     //sc.setCheckpointDir(".") //not used when using local checkpoint
     val randomGen = scala.util.Random
     var currentRDD = rdd
+    currentRDD.cache()
+
     //.cache()
     val logEdgesChosen = ArrayBuffer[Long]()
     var counter = 1
 
-
+    import spark.implicits._
 
     //currentRDD.localCheckpoint()
 
@@ -75,7 +80,7 @@ object Algorithm2 {
         counter += 1
 
         //Condition de fin, le RDD est vide
-        if (currentRDD.isEmpty()) return
+        if (currentRDD.isEmpty) return
 
         //Trouver le sommet S qui est présent dans le plus de tTests (Transformation)
 //        val rdd_sommetsCount = currentRDD.mapPartitions(it => {
@@ -102,7 +107,7 @@ object Algorithm2 {
 
         //Calculate the counts for each vertex (Transformation)
         //todo : maybe aggregateByKey is slightly faster?
-        val counts = rdd_sommetsCount.reduceByKey((a, b) => a + b)
+        val counts = rdd_sommetsCount.rdd.reduceByKey((a, b) => a + b)
 
         //Send random tiebreaker. Closest Long gets chosen in case of a tie.
         val tiebreaker = randomGen.nextLong() % 10

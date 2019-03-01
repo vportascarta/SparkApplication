@@ -75,35 +75,35 @@ object HypergraphProgram {
     sc.setCheckpointDir("./")
     sc.setLogLevel("ERROR")
 
-    val hypergraphRDD = sc.parallelize(hypergraph, partitions)
-
-
-    var myAlgo = 2
-
-    // Looping the algo
-    for (i <- 1 to loops) {
-      CustomLogger.logger.info(s"Test n $i/$loops")
-
-      def get_result: Option[ArrayBuffer[Long]] = {
-//        if (myAlgo == 1) {
-//          Some(Algorithm.greedy_algorithm(sc, hypergraphRDD))
+//    val hypergraphRDD = sc.parallelize(hypergraph, partitions)
+//
+//
+//    var myAlgo = 2
+//
+//    // Looping the algo
+//    for (i <- 1 to loops) {
+//      CustomLogger.logger.info(s"Test n $i/$loops")
+//
+//      def get_result: Option[ArrayBuffer[Long]] = {
+////        if (myAlgo == 1) {
+////          Some(Algorithm.greedy_algorithm(sc, hypergraphRDD))
+////        }
+//
+//         if (myAlgo == 2) {
+//          Some(Algorithm2.greedy_algorithm(sc, hypergraphRDD))
 //        }
-
-         if (myAlgo == 2) {
-          Some(Algorithm2.greedy_algorithm(sc, hypergraphRDD))
-        }
-        else None
-      }
-
-      val hyperedge_choisies = get_result.getOrElse(ArrayBuffer[Long]())
-
-      var result = s"L'algorithme greedy a choisi ${hyperedge_choisies.size} hyperedges "
-      //hyperedge_choisies.foreach(he => result += he + " ")
-
-      CustomLogger.logger.info(result)
-    }
-
-    sc.stop()
+//        else None
+//      }
+//
+//      val hyperedge_choisies = get_result.getOrElse(ArrayBuffer[Long]())
+//
+//      var result = s"L'algorithme greedy a choisi ${hyperedge_choisies.size} hyperedges "
+//      //hyperedge_choisies.foreach(he => result += he + " ")
+//
+//      CustomLogger.logger.info(result)
+//    }
+//
+//    sc.stop()
   }
 
 }
@@ -131,6 +131,8 @@ object runHyperGraphTests extends App
     .master("local[*]")
     .getOrCreate()
 
+  spark.sparkContext.setLogLevel("ERROR")
+
 
   import spark.implicits._
 
@@ -149,8 +151,8 @@ object runHyperGraphTests extends App
   val numberOfloops = 10
 
   var initialT = 5
-  var initialN = 10
-  var initialV = 4
+  var initialN = 8
+  var initialV = 3
 
 //   initialT = 2
 //  initialN = 10
@@ -201,7 +203,7 @@ object runHyperGraphTests extends App
       //println(s"There should be around ${numhyperedges * elementsPerHyperedge} elements in the RDD")
 
       val t1 = System.nanoTime()
-      val chosen_hyperedges = Algorithm2.greedy_algorithm(sc, hypergraphRDD)
+      val chosen_hyperedges = Algorithm2.greedy_algorithm(spark.sparkContext, hypergraphRDD)
       val numcolors = chosen_hyperedges.size
       println(s"L'algorithme greedy a choisi ${numcolors} couleurs")
 
