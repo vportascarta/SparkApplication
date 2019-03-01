@@ -111,28 +111,24 @@ object HypergraphProgram {
 
 object runHyperGraphTests extends App
 {
-//
-//  val conf = new SparkConf()
-//    .setAppName("every hypergraph test is here")
-//    .setMaster("local[*]")
-//    .set("spark.local.dir", "/media/data/") //The 4TB hard drive can be used for shuffle files
-//
-//
-//  val sc = new SparkContext(conf)
-//  sc.setLogLevel("ERROR")
 
 
-  import org.apache.spark.sql.SparkSession
 
-  val spark = SparkSession
-    .builder()
-    .appName("Spark hypergraph set cover")
-    .config("spark.local.dir", "/media/data/")
-    .master("local[*]")
-    .getOrCreate()
+  val conf = new SparkConf()
+    .setAppName("every hypergraph test is here")
+    .setMaster("local[*]")
+    .set("spark.local.dir", "/media/data/") //The 4TB hard drive can be used for shuffle files
+    .set("spark.executor.memory","4g")
+  .set("spark.shuffle.file.buffer","3200k")
 
 
-  import spark.implicits._
+  //Pour Tungsten et Dataset
+    //.set("spark.memory.offHeap.enabled", "true")
+    //.set("spark.memory.offHeap.size", "34359738368")
+
+  val sc = new SparkContext(conf)
+  sc.setLogLevel("ERROR")
+
 
 
   /* Syntax is :
@@ -149,8 +145,8 @@ object runHyperGraphTests extends App
   val numberOfloops = 10
 
   var initialT = 5
-  var initialN = 10
-  var initialV = 4
+  var initialN = 8
+  var initialV = 3
 
 //   initialT = 2
 //  initialN = 10
@@ -184,7 +180,7 @@ object runHyperGraphTests extends App
     val time_elapsed =  (t2gen - t1gen).toDouble  / 1000000000
     println(s"Time elapsed : $time_elapsed seconds")
 
-    val hypergraphRDD = spark.sparkContext.parallelize(hypergraph).toDS()
+    val hypergraphRDD = sc.parallelize(hypergraph)
 
     // For implicit conversions from RDDs to DataFrames
 
