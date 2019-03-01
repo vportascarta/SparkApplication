@@ -2,6 +2,7 @@ package org.apache.spark
 
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.Models.Hypergraph
+import org.apache.spark.sql.DataFrame
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
@@ -110,12 +111,29 @@ object HypergraphProgram {
 
 object runHyperGraphTests extends App
 {
+//
+//  val conf = new SparkConf()
+//    .setAppName("every hypergraph test is here")
+//    .setMaster("local[*]")
+//    .set("spark.local.dir", "/media/data/") //The 4TB hard drive can be used for shuffle files
+//
+//
+//  val sc = new SparkContext(conf)
+//  sc.setLogLevel("ERROR")
 
-  val conf = new SparkConf()
-    .setAppName("every hypergraph test is here")
-    .setMaster("local[*]")
-  val sc = new SparkContext(conf)
-  sc.setLogLevel("ERROR")
+
+  import org.apache.spark.sql.SparkSession
+
+  val spark = SparkSession
+    .builder()
+    .appName("Spark hypergraph set cover")
+    .config("spark.local.dir", "/media/data/")
+    .master("local[*]")
+    .getOrCreate()
+
+
+  import spark.implicits._
+
 
   /* Syntax is :
 
@@ -128,11 +146,11 @@ object runHyperGraphTests extends App
   import java.io._
   val pw = new PrintWriter(new FileOutputStream("results_coloring_hypergraph.txt", true))
 
-  val numberOfloops = 1
+  val numberOfloops = 10
 
-  var initialT = 2
-  var initialN = 2
-  var initialV = 2
+  var initialT = 5
+  var initialN = 10
+  var initialV = 4
 
 //   initialT = 2
 //  initialN = 10
@@ -158,8 +176,18 @@ object runHyperGraphTests extends App
   def gen(t : Int, n : Int, v : Int) =
   {
 
+    val t1gen = System.nanoTime()
+
     val hypergraph = Generator2.generateHypergraph(t, n, v)
-    val hypergraphRDD = sc.parallelize(hypergraph)
+
+    val t2gen = System.nanoTime()
+    val time_elapsed =  (t2gen - t1gen).toDouble  / 1000000000
+    println(s"Time elapsed : $time_elapsed seconds")
+
+    val hypergraphRDD = spark.sparkContext.parallelize(hypergraph).toDS()
+
+    // For implicit conversions from RDDs to DataFrames
+
 
     //val numhyperedges = hypergraph.size
     //val elementsPerHyperedge = hypergraph.head.size
