@@ -56,9 +56,7 @@ object Algorithm2 {
   We decompress before using every array of this RDD!
    */
 
-
   def greedy_algorithm(sc: SparkContext, rdd: Dataset[Array[Int]]): ArrayBuffer[Long] = {
-    //sc.setCheckpointDir(".") //not used when using local checkpoint
     val randomGen = scala.util.Random
     var currentRDD = rdd
     currentRDD.cache()
