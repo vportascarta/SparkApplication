@@ -75,35 +75,33 @@ object HypergraphProgram {
     sc.setCheckpointDir("./")
     sc.setLogLevel("ERROR")
 
-//    val hypergraphRDD = sc.parallelize(hypergraph, partitions)
-//
-//
-//    var myAlgo = 2
-//
-//    // Looping the algo
-//    for (i <- 1 to loops) {
-//      CustomLogger.logger.info(s"Test n $i/$loops")
-//
-//      def get_result: Option[ArrayBuffer[Long]] = {
-////        if (myAlgo == 1) {
-////          Some(Algorithm.greedy_algorithm(sc, hypergraphRDD))
-////        }
-//
-//         if (myAlgo == 2) {
-//          Some(Algorithm2.greedy_algorithm(sc, hypergraphRDD))
+    val hypergraphRDD = sc.parallelize(hypergraph, partitions)
+
+    var myAlgo = 2
+
+    // Looping the algo
+    for (i <- 1 to loops) {
+      CustomLogger.logger.info(s"Test n $i/$loops")
+
+      def get_result: Option[ArrayBuffer[Long]] = {
+//        if (myAlgo == 1) {
+//          Some(Algorithm.greedy_algorithm(sc, hypergraphRDD))
 //        }
-//        else None
-//      }
-//
-//      val hyperedge_choisies = get_result.getOrElse(ArrayBuffer[Long]())
-//
-//      var result = s"L'algorithme greedy a choisi ${hyperedge_choisies.size} hyperedges "
-//      //hyperedge_choisies.foreach(he => result += he + " ")
-//
-//      CustomLogger.logger.info(result)
-//    }
-//
-//    sc.stop()
+
+         if (myAlgo == 2) {
+          Some(Algorithm2.greedy_algorithm(sc, hypergraphRDD))
+        }
+        else None
+      }
+
+      val hyperedge_choisies = get_result.getOrElse(ArrayBuffer[Long]())
+
+      var result = s"L'algorithme greedy a choisi ${hyperedge_choisies.size} hyperedges "
+
+      CustomLogger.logger.info(result)
+    }
+
+    sc.stop()
   }
 
 }
