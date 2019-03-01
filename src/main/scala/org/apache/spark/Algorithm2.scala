@@ -104,8 +104,6 @@ object Algorithm2 {
         //todo : maybe aggregateByKey is slightly faster?
         val counts = rdd_sommetsCount.reduceByKey((a, b) => a + b)
 
-        println("Storage level du RDD : " + counts.getStorageLevel )
-
         //Send random tiebreaker. Closest Long gets chosen in case of a tie.
         val tiebreaker = randomGen.nextLong() % 10
 

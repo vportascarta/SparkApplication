@@ -121,9 +121,6 @@ object runHyperGraphTests extends App
     .set("spark.executor.memory","4g")
   .set("spark.shuffle.file.buffer","3200k")
 
-  spark.sparkContext.setLogLevel("ERROR")
-
-
   //Pour Tungsten et Dataset
     //.set("spark.memory.offHeap.enabled", "true")
     //.set("spark.memory.offHeap.size", "34359738368")
@@ -199,7 +196,7 @@ object runHyperGraphTests extends App
       //println(s"There should be around ${numhyperedges * elementsPerHyperedge} elements in the RDD")
 
       val t1 = System.nanoTime()
-      val chosen_hyperedges = Algorithm2.greedy_algorithm(spark.sparkContext, hypergraphRDD)
+      val chosen_hyperedges = Algorithm2.greedy_algorithm(sc, hypergraphRDD)
       val numcolors = chosen_hyperedges.size
       println(s"L'algorithme greedy a choisi ${numcolors} couleurs")
 
