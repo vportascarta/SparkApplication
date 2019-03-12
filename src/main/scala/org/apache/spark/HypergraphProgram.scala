@@ -111,13 +111,15 @@ object runHyperGraphTests extends App
 {
 
 
-
   val conf = new SparkConf()
     .setAppName("every hypergraph test is here")
     .setMaster("local[*]")
     .set("spark.local.dir", "/media/data/") //The 4TB hard drive can be used for shuffle files
-    .set("spark.executor.memory","4g")
-  .set("spark.shuffle.file.buffer","3200k")
+    //.set("spark.executor.memory","32g")
+  //.set("spark.shuffle.file.buffer","3200k")
+   // .set("spark.dynamicAllocation.enabled", "true")
+    //.set("spark.dynamicAllocation.maxExecutors", "1")
+   // .set("spark.dynamicAllocation.minExecutors", "1")
 
   //Pour Tungsten et Dataset
     //.set("spark.memory.offHeap.enabled", "true")
@@ -139,10 +141,10 @@ object runHyperGraphTests extends App
   import java.io._
   val pw = new PrintWriter(new FileOutputStream("results_coloring_hypergraph.txt", true))
 
-  val numberOfloops = 10
+  val numberOfloops = 1
 
-  var initialT = 5
-  var initialN = 8
+  var initialT = 3
+  var initialN = 61
   var initialV = 3
 
 //   initialT = 2
@@ -153,13 +155,13 @@ object runHyperGraphTests extends App
 
 
   //T
-  for (t <- initialT to 5)
+  for (t <- initialT to 3)
   {
     //vary n
-    for (n <- initialN to 10 )
+    for (n <- initialN to 61 )
     {
       //vary v
-      for (v <- initialV to 4 )
+      for (v <- initialV to 3 )
       {
         gen(t,n,v)
       }
