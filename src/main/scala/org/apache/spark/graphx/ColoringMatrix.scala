@@ -13,7 +13,7 @@ import scala.collection.mutable.SortedSet
 
 case class node_data(tiebreakvalue : Int = 0)
 {
-  var changed : Byte = 0 //0 = didnt change ,1 =changed
+  var changed : Byte = 0 //0 = didnt change ,1 = changed
 var knighthood : Byte = 0
   var color = 0
   val adjvector = new Array[Byte](20)

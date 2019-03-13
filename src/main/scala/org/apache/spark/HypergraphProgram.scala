@@ -110,114 +110,131 @@ object HypergraphProgram {
 object runHyperGraphTests extends App
 {
 
+  def run(map_parameters : scala.collection.mutable.Map[String, String] = null ) : Unit = {
 
-  val conf = new SparkConf()
-    .setAppName("every hypergraph test is here")
-    .setMaster("local[*]")
-    .set("spark.local.dir", "/media/data/") //The 4TB hard drive can be used for shuffle files
-    //.set("spark.executor.memory","32g")
-  //.set("spark.shuffle.file.buffer","3200k")
-   // .set("spark.dynamicAllocation.enabled", "true")
-    //.set("spark.dynamicAllocation.maxExecutors", "1")
-   // .set("spark.dynamicAllocation.minExecutors", "1")
+    val conf = new SparkConf()
+      .setAppName("every hypergraph test is here")
+      .setMaster("local[*]")
+      .set("spark.local.dir", "/media/data/") //The 4TB hard drive can be used for shuffle files
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
 
-  //Pour Tungsten et Dataset
-    //.set("spark.memory.offHeap.enabled", "true")
-    //.set("spark.memory.offHeap.size", "34359738368")
+    /* Syntax is :
 
-  val sc = new SparkContext(conf)
-  sc.setLogLevel("ERROR")
+    2;3;2;COLORING_SPARK;2.559;4;
+    t n v
+     */
+
+    // PrintWriter
+    //ouvrir en mode append
+    import java.io._
+    val pw = new PrintWriter(new FileOutputStream("results_tspark.txt", true))
+
+    var numberOfloops = 1
+
+    //Initial should be 2 everywhere
+    var initialT = 2
+    var initialN = 3
+    var initialV = 2
+
+    var maxT = 2
+    var maxN = 3
+    var maxV = 2
+
+    var print = "false"
+
+    if (map_parameters != null) {
+        numberOfloops = map_parameters("loops").toInt
+        initialT = map_parameters("t").toInt
+        initialN = map_parameters("n").toInt
+        initialV = map_parameters("v").toInt
+        maxT = map_parameters("tMax").toInt
+        maxN = map_parameters("nMax").toInt
+        maxV = map_parameters("vMax").toInt
+        print = map_parameters("print")
+    }
 
 
-
-  /* Syntax is :
-
-  2;3;2;COLORING_SPARK;2.559;4;
-  t n v
-   */
-
-  // PrintWriter
-  //ouvrir en mode append
-  import java.io._
-  val pw = new PrintWriter(new FileOutputStream("results_coloring_hypergraph.txt", true))
-
-  val numberOfloops = 1
-
-  var initialT = 3
-  var initialN = 61
-  var initialV = 3
-
-//   initialT = 2
-//  initialN = 10
-//   initialV = 4
-
-  //Initial should be 2 everywhere
-
-
-  //T
-  for (t <- initialT to 3)
-  {
-    //vary n
-    for (n <- initialN to 61 )
+    //T
+    for (t <- initialT to maxT)
     {
-      //vary v
-      for (v <- initialV to 3 )
+      //vary n
+      for (n <- initialN to maxN )
       {
-        gen(t,n,v)
+        //vary v
+        for (v <- initialV to maxV )
+        {
+          gen(t,n,v)
+        }
       }
     }
-  }
 
-  def gen(t : Int, n : Int, v : Int) =
-  {
-
-    val t1gen = System.nanoTime()
-
-    val hypergraph = Generator2.generateHypergraph(t, n, v)
-
-    val t2gen = System.nanoTime()
-    val time_elapsed =  (t2gen - t1gen).toDouble  / 1000000000
-    println(s"Time elapsed : $time_elapsed seconds")
-
-    val hypergraphRDD = sc.parallelize(hypergraph)
-
-    // For implicit conversions from RDDs to DataFrames
-
-
-    //val numhyperedges = hypergraph.size
-    //val elementsPerHyperedge = hypergraph.head.size
-
-    for (i <- 0 until numberOfloops)
+    def gen(t : Int, n : Int, v : Int) =
     {
-      println(s"Config : T = $t / N = $n / V = $v")
-      println(s"Algorithm : Set Cover greedy algorithm (random tiebreaker)")
-      println(s"Test n $i/$numberOfloops")
-      //println(s"Size of problem : $numhyperedges hyperedges and $elementsPerHyperedge elements per hyperedge on average.")
-      //println(s"There should be around ${numhyperedges * elementsPerHyperedge} elements in the RDD")
 
-      val t1 = System.nanoTime()
-      val chosen_hyperedges = Algorithm2.greedy_algorithm(sc, hypergraphRDD)
-      val numcolors = chosen_hyperedges.size
-      println(s"L'algorithme greedy a choisi ${numcolors} couleurs")
+      val t1gen = System.nanoTime()
 
-      val t2 = System.nanoTime()
-      val time_elapsed =  (t2 - t1).toDouble  / 1000000000
+      val hypergraph = Generator2.generateHypergraph(t, n, v)
 
+      val t2gen = System.nanoTime()
+      val time_elapsed =  (t2gen - t1gen).toDouble  / 1000000000
       println(s"Time elapsed : $time_elapsed seconds")
 
-      //Write the results to our file
-      pw.append(s"$t;$n;$v;HYPERGRAPH_SETCOVER;$time_elapsed;$numcolors\n")
-      pw.flush()
+      val hypergraphRDD = sc.parallelize(hypergraph)
 
-      System.gc()
+      // For implicit conversions from RDDs to DataFrames
+
+
+      //val numhyperedges = hypergraph.size
+      //val elementsPerHyperedge = hypergraph.head.size
+
+      for (i <- 0 until numberOfloops)
+      {
+        println(s"Config : T = $t / N = $n / V = $v")
+        println(s"Algorithm : Set Cover greedy algorithm (random equals) + integer compression")
+        println(s"Test n $i/$numberOfloops")
+        //println(s"Size of problem : $numhyperedges hyperedges and $elementsPerHyperedge elements per hyperedge on average.")
+        //println(s"There should be around ${numhyperedges * elementsPerHyperedge} elements in the RDD")
+
+        val t1 = System.nanoTime()
+        val chosen_hyperedges = Algorithm2.greedy_algorithm(sc, hypergraphRDD)
+        val numcolors = chosen_hyperedges.size
+        println(s"Greedy algorithm found ${numcolors} tests")
+
+        val t2 = System.nanoTime()
+        val time_elapsed =  (t2 - t1).toDouble  / 1000000000
+
+        println(s"Time elapsed : $time_elapsed seconds")
+
+        if (print == "true")
+          chosen_hyperedges.foreach(println)
+
+        //Write the results to our file
+        pw.append(s"$t;$n;$v;HYPERGRAPH_SETCOVER;$time_elapsed;$numcolors\n")
+        pw.flush()
+
+        System.gc()
+
+      }
 
     }
 
-  }
+    //Close file
+    pw.close
 
-  //Close file
-  pw.close
+} //end of run method
 
-
+  run()
 
 }
+
+
+//.set("spark.executor.memory","32g")
+//.set("spark.shuffle.file.buffer","3200k")
+// .set("spark.dynamicAllocation.enabled", "true")
+//.set("spark.dynamicAllocation.maxExecutors", "1")
+// .set("spark.dynamicAllocation.minExecutors", "1")
+
+//Pour Tungsten et Dataset
+//.set("spark.memory.offHeap.enabled", "true")
+//.set("spark.memory.offHeap.size", "34359738368")

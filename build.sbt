@@ -15,7 +15,8 @@ libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.4.0"
 libraryDependencies += "org.apache.spark" %% "spark-graphx" % "2.4.0"
 
 
-mainClass in assembly := Some("ca.lif.sparklauncher.app.Application")
+//mainClass in assembly := Some("ca.lif.sparklauncher.app.Application")
+mainClass in assembly := Some("ca.lif.sparklauncher.console.MainConsole")
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", xs @ _*) => MergeStrategy.discard

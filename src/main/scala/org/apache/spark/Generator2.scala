@@ -30,6 +30,9 @@ object Generator2 {
     twp.addDomain(domains)
     twp.generateTWayEdges()
 
+    //print graph
+    //println(baos)
+
     val content = new String(baos.toByteArray, StandardCharsets.UTF_8)
 
    // CustomLogger.logger.info("GENERATION COMPLETE")

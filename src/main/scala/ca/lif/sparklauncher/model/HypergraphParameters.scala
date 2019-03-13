@@ -1,6 +1,6 @@
 package ca.lif.sparklauncher.model
 
-import org.apache.spark.HypergraphProgram
+import org.apache.spark.{HypergraphProgram, runHyperGraphTests}
 
 import scala.reflect.io.{File, Path}
 
@@ -85,37 +85,41 @@ class HypergraphParameters(
 }
 
 object HypergraphParameters {
-  def parse(map_parameters: Map[String, String]): Option[HypergraphParameters] = {
+  def parse(map_parameters: Map[String, String]): Unit = {
     // s looks like this : --<parameters name> <parameter value> ...
 
     try {
-      val return_value = new HypergraphParameters()
+      //val return_value = new HypergraphParameters()
 
-      // We fill the value
-      return_value.algo = map_parameters("algo").toInt
+//        val loops = map_parameters("loops").toInt
+//        val n = map_parameters("n").toInt
+//        val t = map_parameters("t").toInt
+//        val v = map_parameters("v").toInt
+//
+//        val tMax = map_parameters("tMax").toInt
+//        val nMax = map_parameters("nMax").toInt
+//        val vMax = map_parameters("vMax").toInt
+//
+//        val print = map_parameters("print").toInt
 
-      if (map_parameters.contains("loops"))
-        return_value.loops = map_parameters("loops").toInt
+      var newmap = scala.collection.mutable.Map[String,String]()
+      newmap = newmap ++ map_parameters
 
-      if (map_parameters.contains("partitions")) {
-        return_value.partitions = map_parameters("partitions").toInt
-        if (return_value.partitions == 0) {
-          return_value.partitions = Runtime.getRuntime.availableProcessors
-        }
-      }
+      if (!newmap.contains("loops")) newmap("loops") = "1"
 
-      if (map_parameters("input").equals("file")) {
-        return_value.filepath = map_parameters("path").replaceAll("\"", "")
-      }
+      if (!newmap.contains("t"))  newmap("t") = "2"
+      if (!newmap.contains("n"))  newmap("n") = "3"
+      if (!newmap.contains("v"))  newmap("v") = "2"
 
-      if (map_parameters("input").equals("generated")) {
-        return_value.n = map_parameters("n").toInt
-        return_value.t = map_parameters("t").toInt
-        return_value.v = map_parameters("v").toInt
-      }
 
-      // Return the object
-      Some(return_value)
+      if (!newmap.contains("tMax"))  newmap("tMax") =  newmap("t")
+      if (!newmap.contains("nMax"))  newmap("nMax") =  newmap("n")
+      if (!newmap.contains("vMax"))  newmap("vMax") =  newmap("v")
+
+      if (!newmap.contains("print")) newmap("print") = "false"
+
+        runHyperGraphTests.run(newmap)
+
     }
 
     catch {

@@ -7,10 +7,15 @@ import scala.reflect.io.{File, Path}
 
 object MainConsole {
   val VERSION = "1.0.0"
-  val HEADER = s"Spark Launcher $VERSION (c) 2018 Edmond LA CHANCE & Vincent PORTA-SCARTA"
-  val FOOTER = "For all other tricks, consult the documentation"
+  val HEADER = s"TSPARK $VERSION (c) 2019 Edmond LA CHANCE & Sylvain HALLÉ & Vincent PORTA-SCARTA"
+  val FOOTER = "See results_tspark.txt file. For all other tricks, consult the documentation"
 
   def main(args: Array[String]): Unit = {
+
+    if (args.length == 0) {
+      showConsoleHelp()
+      System.exit(0)
+    }
 
     if (args.contains("--help")) {
       showConsoleHelp()
@@ -43,7 +48,7 @@ object MainConsole {
         }
       }
 
-      val algo_type = map_parameters.getOrElse("type", "nothing")
+      val algo_type = map_parameters("type")
 
       algo_type match {
         case "coloring" =>
@@ -53,53 +58,35 @@ object MainConsole {
           }
 
         case "hypergraph" =>
-          val execution = HypergraphParameters.parse(map_parameters)
-          if (execution.nonEmpty) {
-            execution.get.execute()
-          }
+          HypergraphParameters.parse(map_parameters)
+
 
         case _ => println("Algorithm type unknown, please check --type parameter")
       }
     }
   }
 
+  //Offrir également une fonctionnalité de Graph coloring? Peut etre c'est mieux de juste faire un autre programme.
   def showConsoleHelp(): Unit = {
     println(HEADER)
     println(
       """Help :
         |
-        |--type {coloring | hypergraph} choose your type of algorithm
+        |--type coloring|hypergraph choose your type of algorithm. Default is hypergraph
+        |--loops N    number of loops run by spark on the same data. Default is 1
+        |--t N    interaction strength. Default is 2
+        |--n N    number of variables. Default is 3
+        |--v N    number of values per variable. Default is 2
+        |--print  true|false (prints the results). Default is false
         |
-        |if type = coloring
-        |    --algo {1,2,3}    choose your version
-        |    --loops N    number of loops run by spark on the same data
-        |    --partitions N    number of partitions for each RDD (0 = auto)
-        |    --max_iterations N    maximum number of iteration before quit
-        |    --checkpoint_interval N    interval between two checkpoints (0 = off)
-        |    --input {file | generated}    choose where your input data come from
+        |Optional
+        |Specify max values to generate a range of tests.
+        |Default values = t, n and v values.
+        |--tMax N
+        |--nMax N
+        |--vMax N
         |
-        |    if input = file
-        |        --path "<path to the file>"    path to your file
-        |        --isGraphviz {true | false}    is your file formatted with the graphviz format
-        |    if input = generated
-        |        --n N    number of variables
-        |        --t N    number of variables on each group
-        |        --v N    number of value for one variable
-        |
-        |if type = hypergraph
-        |    --algo {1,2}    choose your version
-        |    --loops N    number of loops run by spark on the same data
-        |    --partitions N    number of partitions for each RDD (0 = auto)
-        |    --input {file | generated}    choose where your input data come from
-        |
-        |    if input = file
-        |       --path "<path to the file>"    path to your file
-        |    if input = generated
-        |       --n N    number of variables
-        |        --t N    number of variables on each group
-        |        --v N    number of value for one variable
-        |
-        |Your can put all this parameters in one config file (each parameter on one line) and call it with @"<path to the config file>"
+        |The results will be appended to a file named results_tspark.txt
         |
         |Tip :
         |To increase the memory available for spark put the java parameter -Xmx before any other parameter
@@ -113,9 +100,9 @@ object MainConsole {
     println(HEADER)
     println(
       """Version :
-        |  Graph Coloring version 1.3
-        |  Hypergraph Solver version 1.2
-        |  Spark version 2.3.0
+        |  Graph Coloring : (Knights and Peasants algorithm)
+        |  Hypergraph : Greedy Set Cover algorithm with Integer compression
+        |  Spark version 2.4.0
       """.stripMargin
     )
   }
@@ -141,6 +128,60 @@ object MainConsole {
     val args_pairs = args_sanitize.grouped(2)
 
     // Then we extract the key, value to create a map
-    args_pairs.map { case Array(k, v) => k -> v }.toMap
+   val toto =  args_pairs.map { case Array(k, v) => k -> v }.toMap
+    toto
   }
 }
+
+object testConsole extends App
+{
+ // MainConsole.main(["--type hypergraph","--loops 1","--t 2", --n 3 --v 2 --print false --tMax 2 --nMax 3 --vMax 2"
+  //var argggs = ["--type hypergraph", "--loops 1", "--t 2"]
+
+  var argggg = Array[String]("--type","hypergraph","--loops","1","--print","true")
+  MainConsole.main(argggg)
+
+
+}
+
+
+
+
+//Old help
+
+//"""Help :
+//|
+//|--type {coloring | hypergraph} choose your type of algorithm. Default is hypergraph
+//|
+//|if type = coloring
+//|    --algo {1,2,3}    choose your version
+//|    --loops N    number of loops run by spark on the same data
+//|    --input {file | generated}  choose where your input data come from. Default is generated.
+//|
+//|    if input = file
+//|        --path "<path to the file>"    path to your file
+//|        --isGraphviz {true | false}    is your file formatted with the graphviz format
+//|
+//|    if input = generated
+//|        --t N    interaction strength
+//|        --n N    number of variables
+//|        --v N    number of values per variable
+//|
+//|if type = hypergraph
+//|    --algo {1,2}    choose your version
+//|    --loops N    number of loops run by spark on the same data
+//|    --partitions N    number of partitions for each RDD (0 = auto)
+//|    --input {file | generated}    choose where your input data come from
+//|
+//|    if input = file
+//|       --path "<path to the file>"    path to your file
+//|    if input = generated
+//|       --n N    number of variables
+//|        --t N    number of variables on each group
+//|        --v N    number of value for one variable
+//|
+//|Your can put all this parameters in one config file (each parameter on one line) and call it with @"<path to the config file>"
+//|
+//|Tip :
+//|To increase the memory available for spark put the java parameter -Xmx before any other parameter
+//|For exemple to use 4Go of RAM, type : java -Xmx4G -jar <jar path> ...
