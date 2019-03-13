@@ -1,3 +1,4 @@
+package org.apache.spark.graphx
 
 /* This algorithm has been optimized to not use shuffles. We use broadcasted arrays instead */
 import org.apache.spark.SparkConf
@@ -11,19 +12,19 @@ import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable.SortedSet
 
-case class node_data(tiebreakvalue : Int = 0)
+case class node_matrix(tiebreakvalue : Int = 0, len : Int = 20)
 {
   var changed : Byte = 0 //0 = didnt change ,1 = changed
 var knighthood : Byte = 0
   var color = 0
-  val adjvector = new Array[Byte](20)
+  val adjvector = new Array[Byte](len)
 
   override def toString: String = {
     var output = ""
-    output += s"tiebreakValue : $tiebreakvalue color : $color knighthood : $knighthood  changed:$changed"
+    output += s"tiebreakValue : $tiebreakvalue color : $color knighthood : $knighthood  changed:$changed\n"
 
-    // for (i <- adjvector)
-    //   output += s"$i "
+     for (i <- adjvector)
+       output += s"$i "
 
     output
   }
@@ -34,21 +35,21 @@ case class edge_data(src : Long, dst : Long)
 
 //todo : les fonctions knight candidate et tiebreaker peuvent etre combinées. Ça fait + de sens ensemble je pense.
 
-class KP_ADJVECTOR extends Serializable {
+class ColoringMatrix extends Serializable {
   var debug = true
-  type node = RDD[Tuple2[Long, node_data]]
+  type node = RDD[Tuple2[Long, node_matrix]]
 
   //We use accumulators to detect the end of iterations. Otherwise we need a "changed" value on every node.
   def makeKnights(firstIteration: Boolean, vertices: node, context: SparkContext,
                   acc : LongAccumulator,
-                  vertices_bcast: Broadcast[Array[(Long, node_data)]]): node =
+                  vertices_bcast: Broadcast[Array[(Long, node_matrix)]]): node =
   {
 
     //Make knight candidates
     //This is also the return value
     vertices.map(v => {
       //We will return a modified node object
-      var returnValue: (Long, node_data) = v
+      var returnValue: (Long, node_matrix) = v
 
       //First we check to see if we can become a knight
       val src = v._1.toInt - 1 //get the src
@@ -59,7 +60,7 @@ class KP_ADJVECTOR extends Serializable {
       //If the node is already a knight, we don't do any work.
       val src_knight = v._2.knighthood
 
-      def trybecomeKnight() : (Long, node_data) =
+      def trybecomeKnight() : (Long, node_matrix) =
       {
         var becomeKnight = false
         //var listColors = scala.collection.mutable.Set[Int]()
@@ -144,7 +145,7 @@ class KP_ADJVECTOR extends Serializable {
 
     //Broadcast the vertices structure
     //1ere action ici
-    var vertices_bcast: Broadcast[Array[(Long, node_data)]] = context.broadcast(myVertices.collect())
+    var vertices_bcast: Broadcast[Array[(Long, node_matrix)]] = context.broadcast(myVertices.collect())
 
     println("Printing initial graph")
     myVertices.collect() foreach println
@@ -226,16 +227,16 @@ object testPetersenAdjlist extends App {
   sc.setLogLevel("ERROR")
 
   var vertices = Array(
-    (1L, new node_data(tiebreakvalue = 1)), //A
-    (2L, new node_data(tiebreakvalue = 2)), //B
-    (3L, new node_data(tiebreakvalue = 3)), //C
-    (4L, new node_data(tiebreakvalue = 4)), //D
-    (5L, new node_data(tiebreakvalue = 5)), //E
-    (6L, new node_data(tiebreakvalue = 6)), //F
-    (7L, new node_data(tiebreakvalue = 7)), //G
-    (8L, new node_data(tiebreakvalue = 8)), //H
-    (9L, new node_data(tiebreakvalue = 9)), //I
-    (10L, new node_data(tiebreakvalue = 10))) //J
+    (1L, new node_matrix(tiebreakvalue = 1)), //A
+    (2L, new node_matrix(tiebreakvalue = 2)), //B
+    (3L, new node_matrix(tiebreakvalue = 3)), //C
+    (4L, new node_matrix(tiebreakvalue = 4)), //D
+    (5L, new node_matrix(tiebreakvalue = 5)), //E
+    (6L, new node_matrix(tiebreakvalue = 6)), //F
+    (7L, new node_matrix(tiebreakvalue = 7)), //G
+    (8L, new node_matrix(tiebreakvalue = 8)), //H
+    (9L, new node_matrix(tiebreakvalue = 9)), //I
+    (10L, new node_matrix(tiebreakvalue = 10))) //J
 
   var edges = Array(
     edge_data(1L, 2L), edge_data(1L, 3L), edge_data(1L, 6L),
@@ -259,7 +260,7 @@ object testPetersenAdjlist extends App {
 
   vertices foreach println
 
-  val algo = new KP_ADJVECTOR()
+  val algo = new ColoringMatrix()
   algo.execute( sc.makeRDD(vertices), sc)
 
 }

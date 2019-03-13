@@ -61,7 +61,7 @@ object ColoringProgram {
   }
 
 
-  def exec_for_gc2( vertices: Array[(Long, node_data)], edges: Vector[edge_data], sc : SparkContext): Int =
+  def exec_for_gc2(vertices: Array[(Long, node_data)], edges: Vector[edge_data], sc : SparkContext): Int =
   {
     val algo = new BCastColoring()
     //Generate tiebreakers
@@ -185,7 +185,7 @@ object ColoringProgram {
 
         val t1 = System.nanoTime()
 
-        exec_for_gc2( vertices = graph._1, edges = graph._2, sc = sc)
+//        exec_for_gc2( vertices = graph._1, edges = graph._2, sc = sc)
 
         val t2 = System.nanoTime()
         val time_elapsed =  (t2 - t1).toDouble  / 1000000000
@@ -196,7 +196,6 @@ object ColoringProgram {
       }
 
     }
-
 
     sc.stop()
   }
@@ -244,7 +243,7 @@ object runLotsOfTests extends App
   {
 
     //Check for invalid graphs
-    if (t >= n || t >= v) return 0
+    if ((t >= n) || (t >= v)) return
 
     val graph = Generator.generate_nodes_and_edges(t, n, v, sc, 12)
 
@@ -261,7 +260,7 @@ object runLotsOfTests extends App
 
         val t1 = System.nanoTime()
 
-        val numcolors = exec_for_gc2( vertices = graph._1, edges = graph._2, sc = sc)
+        val numcolors = exec_for_gc2(graph._1, graph._2, sc)
         println(s"L'algorithme greedy a choisi ${numcolors} couleurs")
 
         val t2 = System.nanoTime()
@@ -282,8 +281,133 @@ object runLotsOfTests extends App
   //Close file
   pw.close
 
+}
+
+
+
+object runColoringTests
+{
+
+  def run(params : scala.collection.mutable.Map[String,String]):  Unit =
+  {
+
+    val conf = new SparkConf()
+      .setAppName("Graph Coloring calculations")
+      .setMaster("local[*]")
+      .set("spark.local.dir", "/media/data/") //The 4TB hard drive can be used for shuffle files
+      val sc = new SparkContext(conf)
+      sc.setLogLevel("ERROR")
+
+    // PrintWriter
+    //ouvrir en mode append
+    import java.io._
+    val pw = new PrintWriter(new FileOutputStream("results_tspark.txt", true))
+
+    var numberOfloops = 1
+
+    //Initial should be 2 everywhere
+    var initialT = 2
+    var initialN = 3
+    var initialV = 2
+
+    var maxT = 2
+    var maxN = 3
+    var maxV = 2
+
+    var print = "false"
+
+    if (params != null) {
+      numberOfloops = params("loops").toInt
+      initialT = params("t").toInt
+      initialN = params("n").toInt
+      initialV = params("v").toInt
+      maxT = params("tMax").toInt
+      maxN = params("nMax").toInt
+      maxV = params("vMax").toInt
+      print = params("print")
+    }
+
+
+    //T
+    for (t <- initialT to maxT)
+    {
+      //vary n
+      for (n <- initialN to maxN )
+      {
+        //vary v
+        for (v <- initialV to maxV )
+        {
+          gen(t,n,v)
+        }
+      }
+    }
+
+    def gen(t : Int, n : Int, v : Int) =
+    {
+
+      val t1gen = System.nanoTime()
+
+      //val hypergraph = Generator2.generateHypergraph(t, n, v)
+
+      val t2gen = System.nanoTime()
+      val time_elapsed =  (t2gen - t1gen).toDouble  / 1000000000
+      println(s"Time elapsed : $time_elapsed seconds")
+
+      //val hypergraphRDD = sc.parallelize(hypergraph)
+
+      // For implicit conversions from RDDs to DataFrames
+
+
+      //val numhyperedges = hypergraph.size
+      //val elementsPerHyperedge = hypergraph.head.size
+
+      for (i <- 0 until numberOfloops)
+      {
+        println(s"Config : T = $t / N = $n / V = $v")
+        println(s"Algorithm : Set Cover greedy algorithm (random equals) + integer compression")
+        println(s"Test n $i/$numberOfloops")
+        //println(s"Size of problem : $numhyperedges hyperedges and $elementsPerHyperedge elements per hyperedge on average.")
+        //println(s"There should be around ${numhyperedges * elementsPerHyperedge} elements in the RDD")
+
+        val t1 = System.nanoTime()
+        //val chosen_hyperedges = Algorithm2.greedy_algorithm(sc, hypergraphRDD)
+        //val numcolors = chosen_hyperedges.size
+//        println(s"Greedy algorithm found ${numcolors} tests")
+
+        val t2 = System.nanoTime()
+        val time_elapsed =  (t2 - t1).toDouble  / 1000000000
+
+        println(s"Time elapsed : $time_elapsed seconds")
+
+        if (print == "true")
+        //  chosen_hyperedges.foreach(println)
+
+        //Write the results to our file
+      //  pw.append(s"$t;$n;$v;HYPERGRAPH_SETCOVER;$time_elapsed;$numcolors\n")
+        pw.flush()
+
+        System.gc()
+
+      }
+
+    }
+
+    //Close file
+    pw.close
+
+
+
+
+
+
+
+  }
 
 
 }
+
+
+
+
 
 

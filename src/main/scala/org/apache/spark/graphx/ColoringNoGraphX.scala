@@ -15,7 +15,7 @@ case class node_data(knighthood : Int = 0, color : Int = 0, tiebreakvalue : Int 
 {
  override def toString: String = s"tiebreakValue : $tiebreakvalue color : $color knighthood : $knighthood"
 }
-case class edge_data(src : Long, dst : Long)
+
 //I don't plan to join nodes to edge. I just plan to use a broadcast variable.
 //The edges do not hav e to be stored in memory.
 

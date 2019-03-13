@@ -1,6 +1,5 @@
 package ca.lif.sparklauncher.model
-
-import org.apache.spark.graphx.ColoringProgram
+import org.apache.spark.graphx.{ColoringProgram, runColoringTests}
 
 import scala.reflect.io.{File, Path}
 
@@ -104,48 +103,27 @@ class ColoringParameters(
 }
 
 object ColoringParameters {
-  def parse(map_parameters: Map[String, String]): Option[ColoringParameters] = {
+  def parse(map_parameters: Map[String, String]): Unit = {
     // s looks like this : --<parameters name> <parameter value> ...
 
     try {
-      val return_value = new ColoringParameters()
 
-      // We fill the value
-      return_value.algo = map_parameters("algo").toInt
+      var newmap = scala.collection.mutable.Map[String,String]()
+      newmap = newmap ++ map_parameters
 
-      if (map_parameters.contains("loops"))
-        return_value.loops = map_parameters("loops").toInt
+      if (!newmap.contains("loops")) newmap("loops") = "1"
+      if (!newmap.contains("t"))  newmap("t") = "2"
+      if (!newmap.contains("n"))  newmap("n") = "3"
+      if (!newmap.contains("v"))  newmap("v") = "2"
 
-      if (map_parameters.contains("partitions")) {
-        return_value.partitions = map_parameters("partitions").toInt
-        if (return_value.partitions == 0) {
-          return_value.partitions = Runtime.getRuntime.availableProcessors
-        }
-      }
+      if (!newmap.contains("tMax"))  newmap("tMax") =  newmap("t")
+      if (!newmap.contains("nMax"))  newmap("nMax") =  newmap("n")
+      if (!newmap.contains("vMax"))  newmap("vMax") =  newmap("v")
 
-      if (map_parameters.contains("max_iterations"))
-        return_value.maxIterations = map_parameters("max_iterations").toInt
+      if (!newmap.contains("print")) newmap("print") = "false"
 
-      if (map_parameters.contains("checkpoint_interval")) {
-        return_value.checkpointInterval = map_parameters("checkpoint_interval").toInt
-        if (return_value.checkpointInterval == 0) {
-          return_value.checkpointInterval = -1
-        }
-      }
+      runColoringTests.run(newmap)
 
-      if (map_parameters("input").equals("file")) {
-        return_value.filepath = map_parameters("path").replaceAll("\"", "")
-        return_value.isGraphviz = map_parameters("is_graphviz").equals("true")
-      }
-
-      if (map_parameters("input").equals("generated")) {
-        return_value.n = map_parameters("n").toInt
-        return_value.t = map_parameters("t").toInt
-        return_value.v = map_parameters("v").toInt
-      }
-
-      // Return the object
-      Some(return_value)
     }
 
     catch {

@@ -13,16 +13,11 @@ import scala.collection.mutable.ArrayBuffer
 object Generator2 {
   def generateHypergraph(t: Int, n: Int, v: Int, output_to_file: Boolean = false): ArrayBuffer[Array[Int]] = {
 
-   // CustomLogger.logger.info("BEGIN GENERATION")
-    println("BEGIN GENERATION")
-
-
     val domains = FrontEnd.createDomains(n, v)
     val var_names: List[String] = new ArrayList[String](domains.size)
     var_names.addAll(domains.keySet)
 
     val twp = new VertexListGenerator(t, var_names)
-
     val baos = new ByteArrayOutputStream()
     val ps = new PrintStream(baos, true, "utf-8")
 
@@ -31,13 +26,22 @@ object Generator2 {
     twp.generateTWayEdges()
 
     //print graph
-    //println(baos)
+    println(s"Graph for t=$t   n=$n   v=$v")
+    println(baos)
+
+    System.exit(0)
 
     val content = new String(baos.toByteArray, StandardCharsets.UTF_8)
 
-   // CustomLogger.logger.info("GENERATION COMPLETE")
     println("END GENERATION")
 
     Parser.parseString(content)
   }
+}
+
+object testhypergen extends App {
+
+  Generator2.generateHypergraph(2,3,2)
+
+
 }

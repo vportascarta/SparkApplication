@@ -1,7 +1,5 @@
 package ca.lif.sparklauncher.console
-
 import ca.lif.sparklauncher.model.{ColoringParameters, HypergraphParameters}
-
 import scala.io.Source
 import scala.reflect.io.{File, Path}
 
@@ -53,13 +51,9 @@ object MainConsole {
       algo_type match {
         case "coloring" =>
           val execution = ColoringParameters.parse(map_parameters)
-          if (execution.nonEmpty) {
-            execution.get.execute()
-          }
 
         case "hypergraph" =>
           HypergraphParameters.parse(map_parameters)
-
 
         case _ => println("Algorithm type unknown, please check --type parameter")
       }
