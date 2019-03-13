@@ -2,8 +2,10 @@ package org.apache.spark.graphx
 
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.graphx.ColoringProgram.exec_for_gc2
+import org.apache.spark.graphx.Generator.generate_graph_matrix
 import org.apache.spark.graphx.Models.node
 import org.apache.spark.graphx.runLotsOfTests.numberOfloops
+import org.apache.spark.graphx.test.{calculateChromaticNumber, numColors, result}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
@@ -288,6 +290,37 @@ object runLotsOfTests extends App
 object runColoringTests
 {
 
+
+  //Generate random tiebreakers for an array of vertices
+  def random_tiebreakers(v : Array[node_matrix] ): Array[node_matrix] =
+  {
+
+    val count = v.size
+    var ids_random: ArrayBuffer[Int] = new ArrayBuffer()
+    Random.shuffle(1 to count).copyToBuffer(ids_random)
+
+    var cc = 0
+
+    for (i <- 0 until v.length)
+      v(i).tiebreakvalue = ids_random(i)
+
+    v
+  }
+
+
+  def calculateChromaticNumber(v : Array[node_matrix]): Int =
+  {
+    var biggestColor = 0
+    v.foreach(  elem => {
+      if (elem.color > biggestColor)
+        biggestColor = elem.color
+    })
+
+    biggestColor
+
+  }
+
+
   def run(params : scala.collection.mutable.Map[String,String]):  Unit =
   {
 
@@ -327,7 +360,6 @@ object runColoringTests
       print = params("print")
     }
 
-
     //T
     for (t <- initialT to maxT)
     {
@@ -345,47 +377,39 @@ object runColoringTests
     def gen(t : Int, n : Int, v : Int) =
     {
 
+      println("Generating graph in dotfile format...")
       val t1gen = System.nanoTime()
-
-      //val hypergraph = Generator2.generateHypergraph(t, n, v)
-
+      var graph = generate_graph_matrix(t,n,v)
       val t2gen = System.nanoTime()
       val time_elapsed =  (t2gen - t1gen).toDouble  / 1000000000
-      println(s"Time elapsed : $time_elapsed seconds")
-
-      //val hypergraphRDD = sc.parallelize(hypergraph)
-
-      // For implicit conversions from RDDs to DataFrames
+      println(s"Time elapsed for generation: $time_elapsed seconds")
 
 
-      //val numhyperedges = hypergraph.size
-      //val elementsPerHyperedge = hypergraph.head.size
+      val algorithm = new ColoringMatrix()
 
       for (i <- 0 until numberOfloops)
       {
         println(s"Config : T = $t / N = $n / V = $v")
-        println(s"Algorithm : Set Cover greedy algorithm (random equals) + integer compression")
+        println(s"Algorithm : Graph Coloring Knights & Peasants with Matrix")
         println(s"Test n $i/$numberOfloops")
-        //println(s"Size of problem : $numhyperedges hyperedges and $elementsPerHyperedge elements per hyperedge on average.")
-        //println(s"There should be around ${numhyperedges * elementsPerHyperedge} elements in the RDD")
+
+        graph = random_tiebreakers(graph)
 
         val t1 = System.nanoTime()
-        //val chosen_hyperedges = Algorithm2.greedy_algorithm(sc, hypergraphRDD)
-        //val numcolors = chosen_hyperedges.size
-//        println(s"Greedy algorithm found ${numcolors} tests")
-
+        val result = algorithm.execute(sc.makeRDD(graph), sc)
         val t2 = System.nanoTime()
-        val time_elapsed =  (t2 - t1).toDouble  / 1000000000
 
+        val numColors = calculateChromaticNumber(result.collect())
+        println(s"Number of colors used to color the graph : $numColors")
+        val time_elapsed =  (t2 - t1).toDouble  / 1000000000
         println(s"Time elapsed : $time_elapsed seconds")
 
         if (print == "true")
-        //  chosen_hyperedges.foreach(println)
+          result.collect.foreach(println)
 
         //Write the results to our file
-      //  pw.append(s"$t;$n;$v;HYPERGRAPH_SETCOVER;$time_elapsed;$numcolors\n")
+        pw.append(s"$t;$n;$v;KPCOLORING_MATRIX;$time_elapsed;$numColors\n")
         pw.flush()
-
         System.gc()
 
       }
@@ -394,11 +418,6 @@ object runColoringTests
 
     //Close file
     pw.close
-
-
-
-
-
 
 
   }

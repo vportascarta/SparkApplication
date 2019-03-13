@@ -1,4 +1,4 @@
-name := "SparkLauncher"
+name := "TSPARK"
 
 version := "0.1"
 

@@ -6,12 +6,14 @@ import java.util.{ArrayList, List}
 
 import ca.lif.sparklauncher.app.CustomLogger
 import ca.uqac.lif.testing.tway._
-import org.apache.spark.SparkContext
+import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.graphx.Generator.generate_graph_matrix
 import org.apache.spark.graphx.Models.node
 import org.apache.spark.rdd.RDD
 
 import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+import scala.util.Random
 
 
 object Generator {
@@ -132,8 +134,8 @@ object Generator {
     twp.generateTWayEdges()
 
     val content = new String(baos.toByteArray, StandardCharsets.UTF_8)
-    println("input graph is  : ")
-    println(content)
+   // println("input graph is  : ")
+    //println(content)
 
     //Il faut maintenant parser "content"
 
@@ -157,8 +159,8 @@ object Generator {
       if (values(1)(0) == '[') return Option(null)
 
       //Faire une edge
-      val src = values(0).toLong + 1
-      val dst = values(2).replace(";", "").toLong + 1
+      val src = values(0).toLong
+      val dst = values(2).replace(";", "").toLong
 
       //Max of 2^32 elements as of now
       if (src > biggestVertex) biggestVertex = src.toInt
@@ -199,8 +201,56 @@ object Generator {
 object test extends App {
 
   val res = generate_graph_matrix(2,3,2)
-  res.foreach( println)
+
+  val conf = new SparkConf()
+    .setAppName("every hypergraph test is here")
+    .setMaster("local[*]")
+    .set("spark.local.dir", "/media/data/") //The 4TB hard drive can be used for shuffle files
+  val sc = new SparkContext(conf)
+  sc.setLogLevel("ERROR")
+
+  val rrr = new ColoringMatrix()
+
+  //Generate random tiebreakers for an array of vertices
+  def random_tiebreakers(v : Array[node_matrix] ): Array[node_matrix] =
+  {
+
+    val count = v.size
+    var ids_random: ArrayBuffer[Int] = new ArrayBuffer()
+    Random.shuffle(1 to count).copyToBuffer(ids_random)
+
+    var cc = 0
+
+    for (i <- 0 until v.length)
+      v(i).tiebreakvalue = ids_random(i)
+
+    v
+  }
+
+
+  def calculateChromaticNumber(v : Array[node_matrix]): Int =
+  {
+    var biggestColor = 0
+    v.foreach(  elem => {
+      if (elem.color > biggestColor)
+        biggestColor = elem.color
+    })
+
+    biggestColor
+
+  }
+
+  val graph = random_tiebreakers(res)
+  val result = rrr.execute(sc.makeRDD(graph), sc)
+  val numColors = calculateChromaticNumber(result.collect())
+
+  println(s"Number of colors : $numColors")
+
+
 }
+
+
+
 
 //    var vertices: mutable.Map[VertexId, node_data] = collection.mutable.Map[Long, node_data]()
 //
