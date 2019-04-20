@@ -40,10 +40,9 @@ object Generator {
   }
 
 
-  def generate_nodes_and_edges( t: Int, n: Int, v: Int, sc: SparkContext, partitions: Int  ) :
+  //Used by Knights and Peasants Message version
+  def generate_nodes_and_edges( t: Int, n: Int, v: Int, sc: SparkContext  ) :
       Tuple2[Array[(Long, node_data)],Vector[edge_data]] = {
-
-    CustomLogger.logger.info("BEGIN GENERATION")
 
     val domains = FrontEnd.createDomains(n, v)
     val var_names: List[String] = new ArrayList[String](domains.size)
@@ -59,8 +58,6 @@ object Generator {
     twp.generateTWayEdges()
 
     val content = new String(baos.toByteArray, StandardCharsets.UTF_8)
-
-    CustomLogger.logger.info("GENERATION COMPLETE")
 
     //Il faut mmaintenant parser "content"
 
@@ -95,7 +92,7 @@ object Generator {
 
     var vertices: mutable.Map[VertexId, node_data] = collection.mutable.Map[Long, node_data]()
 
-    //Fill the map
+    //Permet de faire le tableau des sommets sans connaitre le nombre total auparavant.
     edgesVector.foreach( e => {
       if (!vertices.isDefinedAt(e.src))
         vertices(e.src) = node_data()
@@ -104,22 +101,13 @@ object Generator {
         vertices(e.dst) = node_data()
     })
 
-
-   // println("Print le resultat de la generation")
-    //println("Les edges : ")
-   // edgesVector.foreach(println)
-
-    //println("La map")
-    //vertices.toArray.sortBy(_._1).foreach( println)
-
-
     (vertices.toArray, edgesVector)
 
   }
 
 
   def generate_graph_matrix( t: Int, n: Int, v: Int) :
-  Array[node_matrix] = {
+  Array[Tuple2[Long, node_matrix]] = {
 
     val domains = FrontEnd.createDomains(n, v)
     val var_names: List[String] = new ArrayList[String](domains.size)
@@ -178,17 +166,17 @@ object Generator {
     }
 
     //Now we create the array of node objects.
-    val tototo: Array[node_matrix] = new Array[node_matrix](biggestVertex+1)
+    val tototo: Array[Tuple2[Long, node_matrix]] = new Array[Tuple2[Long, node_matrix]](biggestVertex+1)
     for (i <- 0 to biggestVertex) {
-        tototo(i) =  node_matrix(0, biggestVertex+1)
+        tototo(i) =  (i, node_matrix(0, biggestVertex+1))
     }
 
     //We fill it using our vector
     for (i <- edgesVector) {
       val src = i.src.toInt
       val dst = i.dst.toInt
-      tototo(src).adjvector(dst) = 1
-      tototo(dst).adjvector(src) = 1
+      tototo(src)._2.adjvector(dst) = 1
+      tototo(dst)._2.adjvector(src) = 1
     }
 
     //We return the completed data structure.
@@ -200,7 +188,7 @@ object Generator {
 
 object test extends App {
 
-  val res = generate_graph_matrix(2,3,2)
+  val res = generate_graph_matrix(4,9,2)
 
   val conf = new SparkConf()
     .setAppName("every hypergraph test is here")
@@ -209,10 +197,10 @@ object test extends App {
   val sc = new SparkContext(conf)
   sc.setLogLevel("ERROR")
 
-  val rrr = new ColoringMatrix()
+  val rrr = new KP_ADJVECTOR()
 
   //Generate random tiebreakers for an array of vertices
-  def random_tiebreakers(v : Array[node_matrix] ): Array[node_matrix] =
+  def random_tiebreakers(v : Array[Tuple2[Long, node_matrix]] ): Array[Tuple2[Long, node_matrix]] =
   {
 
     val count = v.size
@@ -222,18 +210,18 @@ object test extends App {
     var cc = 0
 
     for (i <- 0 until v.length)
-      v(i).tiebreakvalue = ids_random(i)
+      v(i)._2.tiebreakvalue = ids_random(i)
 
     v
   }
 
 
-  def calculateChromaticNumber(v : Array[node_matrix]): Int =
+  def calculateChromaticNumber(v : Array[Tuple2[Long, node_matrix]]): Int =
   {
     var biggestColor = 0
     v.foreach(  elem => {
-      if (elem.color > biggestColor)
-        biggestColor = elem.color
+      if (elem._2.color > biggestColor)
+        biggestColor = elem._2.color
     })
 
     biggestColor
@@ -241,6 +229,13 @@ object test extends App {
   }
 
   val graph = random_tiebreakers(res)
+  val numNodes = graph.size
+  val sizeInMegabytes = numNodes * numNodes / 1000 / 1000
+
+  //Display size of graph
+  println(s"Size of graph : $numNodes nodes. The adjmatrix size is $sizeInMegabytes megabytes")
+
+
   val result = rrr.execute(sc.makeRDD(graph), sc)
   val numColors = calculateChromaticNumber(result.collect())
 

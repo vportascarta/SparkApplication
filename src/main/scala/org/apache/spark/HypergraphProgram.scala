@@ -133,12 +133,12 @@ object runHyperGraphTests extends App
     var numberOfloops = 1
 
     //Initial should be 2 everywhere
-    var initialT = 2
-    var initialN = 3
+    var initialT = 3
+    var initialN = 20
     var initialV = 2
 
-    var maxT = 2
-    var maxN = 3
+    var maxT = 3
+    var maxN = 20
     var maxV = 2
 
     var print = "false"
@@ -224,7 +224,7 @@ object runHyperGraphTests extends App
 
 } //end of run method
 
-  run()
+  run(null)
 
 }
 

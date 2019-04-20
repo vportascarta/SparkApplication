@@ -10,10 +10,14 @@ import org.apache.spark.Models.Hypergraph
 
 import scala.collection.mutable.ArrayBuffer
 
+import ca.uqac.lif.testing.tway.FrontEnd
+
 object Generator2 {
   def generateHypergraph(t: Int, n: Int, v: Int, output_to_file: Boolean = false): ArrayBuffer[Array[Int]] = {
 
+
     val domains = FrontEnd.createDomains(n, v)
+
     val var_names: List[String] = new ArrayList[String](domains.size)
     var_names.addAll(domains.keySet)
 
@@ -26,10 +30,10 @@ object Generator2 {
     twp.generateTWayEdges()
 
     //print graph
-    println(s"Graph for t=$t   n=$n   v=$v")
-    println(baos)
+    //println(s"Graph for t=$t   n=$n   v=$v")
+    //println(baos)
 
-    System.exit(0)
+   // System.exit(0)
 
     val content = new String(baos.toByteArray, StandardCharsets.UTF_8)
 

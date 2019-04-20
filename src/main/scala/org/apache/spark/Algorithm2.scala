@@ -134,6 +134,7 @@ object Algorithm2 {
         //Remove dead T-tests
         //best_1 will be shipped to each task but it is rather small.
         //No need to use a BC variable here
+
         currentRDD = currentRDD.flatMap(edge => {
           //Decompress the set of tests
           val recov = utilss.lemire_uncompress(edge) // equals to data
@@ -142,6 +143,14 @@ object Algorithm2 {
             None
           else Some(edge)
         })
+
+//        currentRDD = currentRDD.filter(edge => {
+//          //Decompress the set of tests
+//          val recov = utilss.lemire_uncompress(edge) // equals to data
+//          if (recov.contains(best._1))
+//            false
+//          else true
+//        })
 
         //Manually unpersist unused RDDs
        //rdd_sommetsCount.unpersist(false)

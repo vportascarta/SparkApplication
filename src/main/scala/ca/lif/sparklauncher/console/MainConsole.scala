@@ -49,12 +49,9 @@ object MainConsole {
       val algo_type = map_parameters("type")
 
       algo_type match {
-        case "coloring" =>
-          val execution = ColoringParameters.parse(map_parameters)
-
-        case "hypergraph" =>
-          HypergraphParameters.parse(map_parameters)
-
+        case "coloringMatrix" => ColoringParameters.parse(algo = "matrix", map_parameters)
+        case "coloringMessages" => ColoringParameters.parse(algo = "messages", map_parameters)
+        case "hypergraph" => HypergraphParameters.parse(map_parameters)
         case _ => println("Algorithm type unknown, please check --type parameter")
       }
     }
@@ -66,7 +63,7 @@ object MainConsole {
     println(
       """Help :
         |
-        |--type coloring|hypergraph choose your type of algorithm. Default is hypergraph
+        |--type coloringMatrix|coloringMessages|hypergraph choose your type of algorithm. Default is hypergraph
         |--loops N    number of loops run by spark on the same data. Default is 1
         |--t N    interaction strength. Default is 2
         |--n N    number of variables. Default is 3

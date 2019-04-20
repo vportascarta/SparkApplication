@@ -3,9 +3,6 @@ package org.apache.spark.graphx
 import ca.lif.sparklauncher.app.CustomLogger
 import org.apache.spark.graphx.ColoringProgram.exec_for_gc2
 import org.apache.spark.graphx.Generator.generate_graph_matrix
-import org.apache.spark.graphx.Models.node
-import org.apache.spark.graphx.runLotsOfTests.numberOfloops
-import org.apache.spark.graphx.test.{calculateChromaticNumber, numColors, result}
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.collection.mutable
@@ -167,7 +164,7 @@ object ColoringProgram {
     else if (algo_version == 3)
     {
 
-      val graph = Generator.generate_nodes_and_edges(t, n, v, sc, partitions)
+      val graph = Generator.generate_nodes_and_edges(t, n, v, sc)
       CustomLogger.logger.info(s"Config : T = $t / N = $n / V = $v")
 
       // Looping the algo
@@ -203,57 +200,76 @@ object ColoringProgram {
   }
 }
 
-
+//Object for the message passing version of Knights & Peasants.
 object runLotsOfTests extends App
 {
 
-  val conf = new SparkConf()
-    .setAppName("Test everything and write results")
-    .setMaster("local[*]")
-  val sc = new SparkContext(conf)
-  sc.setLogLevel("ERROR")
 
-  /* Syntax is :
-
-  2;3;2;COLORING_SPARK;2.559;4;
-  t n v
-   */
-
-  // PrintWriter
-  //ouvrir en mode append
-  import java.io._
-  val pw = new PrintWriter(new FileOutputStream("results_coloring.txt", true))
- // pw.write("Hello, world")
-
-  val numberOfloops = 10
-
-  //T
-  for (t <- 2 to 5)
-    {
-      //vary n
-        for (n <- 2 to 10 )
-        {
-          //vary v
-          for (v <- 2 to 4 )
-          {
-              gen(t,n,v)
-          }
-        }
-    }
-
-  def gen(t : Int, n : Int, v : Int): Unit =
+  def run(params : scala.collection.mutable.Map[String,String]):  Unit =
   {
 
-    //Check for invalid graphs
-    if ((t >= n) || (t >= v)) return
+    val conf = new SparkConf()
+      .setAppName("Knights and Peasants, hash-broadcast joins")
+      .setMaster("local[*]")
+      .set("spark.local.dir", "/media/data/") //The 4TB hard drive can be used for shuffle files
+    val sc = new SparkContext(conf)
+    sc.setLogLevel("ERROR")
 
-    val graph = Generator.generate_nodes_and_edges(t, n, v, sc, 12)
+    // PrintWriter
+    //ouvrir en mode append
+    import java.io._
+    val pw = new PrintWriter(new FileOutputStream("results_tspark.txt", true))
 
-    val numVertices = graph._1.size
-    val numEdges = graph._2.size
+    var numberOfloops = 1
 
+    //Initial should be 2 everywhere
+    var initialT = 2
+    var initialN = 3
+    var initialV = 2
 
-    for (i <- 0 until numberOfloops)
+    var maxT = 2
+    var maxN = 3
+    var maxV = 2
+
+    var print = "false"
+
+    if (params != null) {
+      numberOfloops = params("loops").toInt
+      initialT = params("t").toInt
+      initialN = params("n").toInt
+      initialV = params("v").toInt
+      maxT = params("tMax").toInt
+      maxN = params("nMax").toInt
+      maxV = params("vMax").toInt
+      print = params("print")
+    }
+
+    //T
+    for (t <- initialT to maxT)
+    {
+      //vary n
+      for (n <- initialN to maxN )
+      {
+        //vary v
+        for (v <- initialV to maxV )
+        {
+          gen(t,n,v)
+        }
+      }
+    }
+
+    def gen(t : Int, n : Int, v : Int): Unit =
+    {
+
+      //Check for invalid graphs
+      if ((t >= n)  == true) return
+
+      val graph = Generator.generate_nodes_and_edges(t, n, v, sc)
+
+      val numVertices = graph._1.size
+      val numEdges = graph._2.size
+
+      for (i <- 0 until numberOfloops)
       {
         println(s"Config : T = $t / N = $n / V = $v")
         println(s"Algorithm : Knights and Peasants with Hash-broadcast joins")
@@ -278,21 +294,22 @@ object runLotsOfTests extends App
 
       }
 
-  }
+    }
 
-  //Close file
-  pw.close
+    //Close file
+    pw.close
+  }
 
 }
 
 
-
+//This object handles the coloring tests for the Coloring Algorithm that uses an adjacency matrix
 object runColoringTests
 {
 
 
   //Generate random tiebreakers for an array of vertices
-  def random_tiebreakers(v : Array[node_matrix] ): Array[node_matrix] =
+  def random_tiebreakers(v : Array[Tuple2[Long, node_matrix]] ): Array[Tuple2[Long, node_matrix]] =
   {
 
     val count = v.size
@@ -302,18 +319,18 @@ object runColoringTests
     var cc = 0
 
     for (i <- 0 until v.length)
-      v(i).tiebreakvalue = ids_random(i)
+      v(i)._2.tiebreakvalue = ids_random(i)
 
     v
   }
 
 
-  def calculateChromaticNumber(v : Array[node_matrix]): Int =
+  def calculateChromaticNumber(v : Array[Tuple2[Long, node_matrix]]): Int =
   {
     var biggestColor = 0
     v.foreach(  elem => {
-      if (elem.color > biggestColor)
-        biggestColor = elem.color
+      if (elem._2.color > biggestColor)
+        biggestColor = elem._2.color
     })
 
     biggestColor
@@ -384,8 +401,14 @@ object runColoringTests
       val time_elapsed =  (t2gen - t1gen).toDouble  / 1000000000
       println(s"Time elapsed for generation: $time_elapsed seconds")
 
+      val numNodes = graph.size
+      val sizeInMegabytes = numNodes * numNodes / 1000 / 1000
 
-      val algorithm = new ColoringMatrix()
+      //Display size of graph
+      println(s"Size of graph : $numNodes nodes. The adjmatrix size is $sizeInMegabytes megabytes")
+
+
+      val algorithm = new KP_ADJVECTOR()
 
       for (i <- 0 until numberOfloops)
       {
@@ -424,6 +447,11 @@ object runColoringTests
 
 
 }
+
+
+
+
+
 
 
 

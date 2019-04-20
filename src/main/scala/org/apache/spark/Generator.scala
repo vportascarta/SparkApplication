@@ -103,10 +103,10 @@ object Generator {
     }
 
     //Print all combinations for one variable
-    /*for (i <- combinations) {
+    for (i <- combinations) {
       print(i + " ")
     }
-    println("")*/
+    println("")
 
     // Cast to an Hypergraph
     hypergraph += Hyperedge(mutable.Set(combinations.map { e =>
@@ -151,7 +151,7 @@ object Generator {
   }
 
   def generateHypergraph(t: Int, n: Int, v: Int, output_to_file: Boolean = false): Hypergraph = {
-    CustomLogger.logger.info("BEGIN GENERATION")
+    //CustomLogger.logger.info("BEGIN GENERATION")
     // Build all variables
     for (n_iter <- 1 to n) {
       val var_name = s"var$n_iter"
@@ -192,7 +192,7 @@ object Generator {
 
 object testGenerator extends App
 {
-    val res = Generator.generateHypergraph(3,2,2,false)
+    val res = Generator.generateHypergraph(3,2,2,true)
    res.foreach( println)
 
 

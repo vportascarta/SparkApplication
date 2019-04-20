@@ -1,5 +1,5 @@
 package ca.lif.sparklauncher.model
-import org.apache.spark.graphx.{ColoringProgram, runColoringTests}
+import org.apache.spark.graphx.{ColoringProgram, runColoringTests, runLotsOfTests}
 
 import scala.reflect.io.{File, Path}
 
@@ -103,7 +103,10 @@ class ColoringParameters(
 }
 
 object ColoringParameters {
-  def parse(map_parameters: Map[String, String]): Unit = {
+
+
+  def parse(algo : String, map_parameters: Map[String, String]): Unit =
+  {
     // s looks like this : --<parameters name> <parameter value> ...
 
     try {
@@ -122,7 +125,11 @@ object ColoringParameters {
 
       if (!newmap.contains("print")) newmap("print") = "false"
 
+      if (algo == "matrix")
       runColoringTests.run(newmap)
+
+      else if (algo == "messages")
+        runLotsOfTests.run(newmap)
 
     }
 
@@ -134,5 +141,8 @@ object ColoringParameters {
       }
     }
 
-  }
+  } //fin fonction parse
+
+
+
 }

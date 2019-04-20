@@ -3,7 +3,6 @@ package org.apache.spark.graphx
 /* This algorithm has been optimized to not use shuffles. We use broadcasted arrays instead */
 import org.apache.spark.SparkConf
 import org.apache.spark.SparkContext
-import org.apache.spark.broadcast.Broadcast
 import org.apache.spark.rdd.RDD
 import org.apache.spark.storage.StorageLevel
 
@@ -230,7 +229,7 @@ class BCastColoring extends Serializable
  def execute(vertices : node, e : edge,  context : SparkContext) :  graph =
  {
   var counter = 0
-  var myVertices: node = vertices.persist(StorageLevel.MEMORY_ONLY_SER)
+  var myVertices: node = vertices
   var myEdges = e.cache()
 
   //First iteration is off loop.
